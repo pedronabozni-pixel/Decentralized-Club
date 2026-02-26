@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(circle at 10% 10%, rgba(200, 163, 90, 0.18) 0%, transparent 35%),
+    radial-gradient(circle at 90% -5%, rgba(200, 163, 90, 0.12) 0%, transparent 30%),
+    linear-gradient(160deg, #0e0e11 0%, #141418 50%, #0f0f13 100%);
+  color: #f1f1f2;
+  min-height: 100vh;
+  font-family: var(--font-body), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.card {
+  @apply rounded-2xl border border-border bg-panel/95 p-4 shadow-[0_20px_45px_-35px_rgba(0,0,0,1)];
+  backdrop-filter: blur(8px);
+}
+
+.input {
+  @apply w-full rounded-xl border border-border bg-bg/80 px-3 py-2 text-text outline-none focus:border-brand;
+}
+
+.btn {
+  @apply rounded-xl bg-brand px-4 py-2 font-semibold text-black transition hover:brightness-95;
+}
+
+.btn-secondary {
+  @apply rounded-xl border border-border bg-panelSoft px-4 py-2 font-semibold text-text transition hover:border-brand/60;
+}
+
+.drop-input {
+  @apply flex flex-col gap-1 rounded-xl border border-dashed border-brand/45 bg-panelSoft/70 p-4;
+}
+
+.brand-title {
+  @apply font-serif tracking-wide text-text;
+}
+
+.brand-banner {
+  background:
+    linear-gradient(180deg, rgba(12, 12, 16, 0.7), rgba(12, 12, 16, 0.92)),
+    url("/brand/banner.svg");
+  background-size: cover;
+  background-position: center;
+}
+
+.glass-line {
+  position: relative;
+}
+
+.glass-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200, 163, 90, 0.5), transparent);
+}
