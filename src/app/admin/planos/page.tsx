@@ -68,6 +68,43 @@ async function togglePlan(formData: FormData) {
   revalidatePath("/admin/planos");
 }
 
+async function updatePlan(formData: FormData) {
+  "use server";
+  await requireAdminSession();
+
+  const id = String(formData.get("id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const priceInput = String(formData.get("price") ?? "").trim();
+  const kirvanoProductId = String(formData.get("kirvanoProductId") ?? "").trim();
+  const permissionsRaw = String(formData.get("permissionsJson") ?? "{}");
+  const isActive = String(formData.get("isActive") ?? "false") === "true";
+
+  if (!id || !name || !kirvanoProductId) return;
+
+  const priceCents = parsePriceToCents(priceInput);
+  if (priceCents === null) return;
+
+  let permissionsJson: object = {};
+  try {
+    permissionsJson = JSON.parse(permissionsRaw);
+  } catch {
+    permissionsJson = { raw: permissionsRaw };
+  }
+
+  await db.plan.update({
+    where: { id },
+    data: {
+      name,
+      priceCents,
+      kirvanoProductId,
+      permissionsJson,
+      isActive
+    }
+  });
+
+  revalidatePath("/admin/planos");
+}
+
 async function deletePlan(formData: FormData) {
   "use server";
   await requireAdminSession();
@@ -75,18 +112,13 @@ async function deletePlan(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
-  const [subscriptionsCount, videosCount] = await Promise.all([
-    db.subscription.count({ where: { planId: id } }),
-    db.video.count({ where: { requiredPlanId: id } })
-  ]);
+  await db.$transaction(async (tx) => {
+    // Remove vínculos que impedem exclusão definitiva do plano.
+    await tx.subscription.deleteMany({ where: { planId: id } });
+    await tx.video.updateMany({ where: { requiredPlanId: id }, data: { requiredPlanId: null } });
+    await tx.plan.delete({ where: { id } });
+  });
 
-  if (subscriptionsCount > 0 || videosCount > 0) {
-    await db.plan.update({ where: { id }, data: { isActive: false } });
-    revalidatePath("/admin/planos");
-    return;
-  }
-
-  await db.plan.delete({ where: { id } });
   revalidatePath("/admin/planos");
 }
 
@@ -125,28 +157,62 @@ export default async function AdminPlansPage() {
 
       <section className="space-y-2">
         {plans.map((plan) => (
-          <article className="card flex flex-wrap items-center justify-between gap-2" key={plan.id}>
-            <div>
-              <h2 className="font-semibold">{plan.name}</h2>
-              <p className="text-sm text-muted">
-                {formatMoney(plan.priceCents)} • {plan.kirvanoProductId}
-              </p>
+          <article className="card space-y-3" key={plan.id}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="font-semibold">{plan.name}</h2>
+                <p className="text-sm text-muted">
+                  {formatMoney(plan.priceCents)} • {plan.kirvanoProductId}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <form action={togglePlan}>
+                  <input name="id" type="hidden" value={plan.id} />
+                  <input name="isActive" type="hidden" value={String(!plan.isActive)} />
+                  <button className="btn-secondary" type="submit">
+                    {plan.isActive ? "Desativar" : "Ativar"}
+                  </button>
+                </form>
+                <form action={deletePlan}>
+                  <input name="id" type="hidden" value={plan.id} />
+                  <button
+                    className="rounded-xl border border-red-500/40 px-4 py-2 font-semibold text-red-300 hover:bg-red-500/10"
+                    type="submit"
+                  >
+                    Excluir
+                  </button>
+                </form>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <form action={togglePlan}>
+
+            <details>
+              <summary className="cursor-pointer text-sm text-muted">Editar plano</summary>
+              <form action={updatePlan} className="mt-3 grid gap-2">
                 <input name="id" type="hidden" value={plan.id} />
-                <input name="isActive" type="hidden" value={String(!plan.isActive)} />
-                <button className="btn-secondary" type="submit">
-                  {plan.isActive ? "Desativar" : "Ativar"}
+                <input className="input" defaultValue={plan.name} name="name" required />
+                <input
+                  className="input"
+                  defaultValue={(plan.priceCents / 100).toFixed(2).replace(".", ",")}
+                  inputMode="decimal"
+                  name="price"
+                  required
+                  type="text"
+                />
+                <input className="input" defaultValue={plan.kirvanoProductId} name="kirvanoProductId" required />
+                <textarea
+                  className="input min-h-24"
+                  defaultValue={JSON.stringify(plan.permissionsJson, null, 2)}
+                  name="permissionsJson"
+                />
+                <label className="flex items-center gap-2 text-sm text-muted">
+                  <input defaultChecked={plan.isActive} name="isActive" type="checkbox" value="true" />
+                  Plano ativo
+                </label>
+                <button className="btn w-fit" type="submit">
+                  Salvar edição
                 </button>
               </form>
-              <form action={deletePlan}>
-                <input name="id" type="hidden" value={plan.id} />
-                <button className="rounded-xl border border-red-500/40 px-4 py-2 font-semibold text-red-300 hover:bg-red-500/10" type="submit">
-                  Excluir
-                </button>
-              </form>
-            </div>
+            </details>
           </article>
         ))}
       </section>
