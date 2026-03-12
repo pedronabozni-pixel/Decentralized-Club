@@ -13,5 +13,6 @@ RUN npm run build
 ENV NODE_ENV=production
 EXPOSE 3000
 
-# Keep schema in sync and run Next.js. Seed is now manual-only.
-CMD sh -c "npx prisma db push --schema prisma/schema.postgres.prisma && npm run start -- -p ${PORT:-3000}"
+# Keep schema in sync and run Next.js.
+# Optional one-time seed in production via RUN_PRISMA_SEED=true.
+CMD sh -c "npx prisma db push --schema prisma/schema.postgres.prisma && if [ \"${RUN_PRISMA_SEED}\" = \"true\" ]; then npm run prisma:seed; fi && npm run start -- -p ${PORT:-3000}"
