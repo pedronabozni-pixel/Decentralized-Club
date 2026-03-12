@@ -79,6 +79,8 @@ export function CryptoMarketPanel({ market, topCoins }: Props) {
         {assets.map((asset) => {
           const row = market?.[asset.key];
           const active = selectedTvSymbol === asset.tvSymbol;
+          const hasPrice = typeof row?.usd === "number";
+          const hasChange = typeof row?.usd_24h_change === "number";
 
           return (
             <button
@@ -91,9 +93,9 @@ export function CryptoMarketPanel({ market, topCoins }: Props) {
               type="button"
             >
               <p className="text-sm text-muted">{asset.label}</p>
-              <p className="text-xl font-semibold">${row?.usd?.toLocaleString("en-US") ?? "-"}</p>
-              <p className={`text-sm ${(row?.usd_24h_change ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                {(row?.usd_24h_change ?? 0).toFixed(2)}%
+              <p className="text-xl font-semibold">{hasPrice ? `$${row.usd!.toLocaleString("en-US")}` : "-"}</p>
+              <p className={`text-sm ${!hasChange || row!.usd_24h_change! >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {hasChange ? `${row!.usd_24h_change!.toFixed(2)}%` : "-"}
               </p>
             </button>
           );

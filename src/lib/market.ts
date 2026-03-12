@@ -1,16 +1,84 @@
 export async function getMarketSnapshot() {
   const base = process.env.COINGECKO_API_BASE ?? "https://api.coingecko.com/api/v3";
 
-  const response = await fetch(
-    `${base}/simple/price?ids=bitcoin,ethereum,solana,binancecoin&vs_currencies=usd&include_24hr_change=true`,
-    { next: { revalidate: 120 } }
-  );
+  try {
+    const response = await fetch(
+      `${base}/simple/price?ids=bitcoin,ethereum,solana,binancecoin&vs_currencies=usd&include_24hr_change=true`,
+      {
+        headers: {
+          Accept: "application/json"
+        },
+        next: { revalidate: 120 }
+      }
+    );
 
-  if (!response.ok) {
-    return null;
+    if (response.ok) {
+      return response.json();
+    }
+  } catch {
+    // Fallback below.
   }
 
-  return response.json();
+  const apiKey = process.env.CMC_API_KEY;
+  const cmcBase = process.env.CMC_API_BASE ?? "https://pro-api.coinmarketcap.com";
+  if (!apiKey) return null;
+
+  try {
+    const response = await fetch(
+      `${cmcBase}/v2/cryptocurrency/quotes/latest?symbol=BTC,ETH,SOL,BNB&convert=USD`,
+      {
+        headers: {
+          Accept: "application/json",
+          "X-CMC_PRO_API_KEY": apiKey
+        },
+        next: { revalidate: 120 }
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as {
+      data?: Record<
+        string,
+        Array<{
+          quote?: {
+            USD?: {
+              price?: number;
+              percent_change_24h?: number;
+            };
+          };
+        }>
+      >;
+    };
+
+    const btc = payload.data?.BTC?.[0]?.quote?.USD;
+    const eth = payload.data?.ETH?.[0]?.quote?.USD;
+    const sol = payload.data?.SOL?.[0]?.quote?.USD;
+    const bnb = payload.data?.BNB?.[0]?.quote?.USD;
+
+    if (!btc && !eth && !sol && !bnb) return null;
+
+    return {
+      bitcoin: {
+        usd: btc?.price,
+        usd_24h_change: btc?.percent_change_24h
+      },
+      ethereum: {
+        usd: eth?.price,
+        usd_24h_change: eth?.percent_change_24h
+      },
+      solana: {
+        usd: sol?.price,
+        usd_24h_change: sol?.percent_change_24h
+      },
+      binancecoin: {
+        usd: bnb?.price,
+        usd_24h_change: bnb?.percent_change_24h
+      }
+    };
+  } catch {
+    return null;
+  }
 }
 
 export type TopCoinForTv = {
