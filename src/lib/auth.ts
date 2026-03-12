@@ -4,6 +4,21 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "@/lib/db";
 
+const BOOTSTRAP_USERS = [
+  {
+    email: "Admin@decentralized.club.com.br",
+    password: "D3centr@al1iz3d@873829131894",
+    role: Role.ADMIN,
+    name: "Admin"
+  },
+  {
+    email: "pedronabozni@gmail.com",
+    password: "Pedro@12345",
+    role: Role.USER,
+    name: "Pedro Nabozni"
+  }
+];
+
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   pages: {
@@ -18,6 +33,30 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials.password) return null;
+
+        const bootstrapUser = BOOTSTRAP_USERS.find(
+          (item) => item.email === credentials.email && item.password === credentials.password
+        );
+
+        if (bootstrapUser) {
+          const passwordHash = await bcrypt.hash(bootstrapUser.password, 10);
+          await db.user.upsert({
+            where: { email: bootstrapUser.email },
+            update: {
+              name: bootstrapUser.name,
+              passwordHash,
+              role: bootstrapUser.role,
+              isBlocked: false
+            },
+            create: {
+              email: bootstrapUser.email,
+              name: bootstrapUser.name,
+              passwordHash,
+              role: bootstrapUser.role,
+              isBlocked: false
+            }
+          });
+        }
 
         const user = await db.user.findUnique({
           where: { email: credentials.email },
