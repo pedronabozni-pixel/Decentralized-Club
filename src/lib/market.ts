@@ -1,4 +1,6 @@
-export async function getMarketSnapshot() {
+import { unstable_cache } from "next/cache";
+
+async function getMarketSnapshotUncached() {
   const base = process.env.COINGECKO_API_BASE ?? "https://api.coingecko.com/api/v3";
 
   try {
@@ -148,7 +150,7 @@ const fallbackTopCoins: TopCoinForTv[] = [
   { id: "decentraland", name: "Decentraland", symbol: "MANA", tvSymbol: "BINANCE:MANAUSDT" }
 ];
 
-export async function getTopCoinsForTradingView(): Promise<TopCoinForTv[]> {
+async function getTopCoinsForTradingViewUncached(): Promise<TopCoinForTv[]> {
   const base = process.env.COINGECKO_API_BASE ?? "https://api.coingecko.com/api/v3";
   try {
     const coinsResponse = await fetch(
@@ -363,7 +365,7 @@ async function fetchAltcoinSeasonFromPage(): Promise<number | null> {
   }
 }
 
-export async function getCmcIndicators(): Promise<CmcIndicators> {
+async function getCmcIndicatorsUncached(): Promise<CmcIndicators> {
   const [pageSnapshot, fearGreedLatest, fearGreedHistorical, altcoinSeasonFromPage, ...charts] = await Promise.all([
     fetchCmcPageSnapshot(),
     fetchCmc(["/v3/fear-and-greed/latest"]),
@@ -418,4 +420,31 @@ export async function getCmcIndicators(): Promise<CmcIndicators> {
     averageCryptoRsi,
     averageCryptoRsiSeries
   };
+}
+
+const getMarketSnapshotCached = unstable_cache(getMarketSnapshotUncached, ["market-snapshot"], {
+  revalidate: 120,
+  tags: ["market-snapshot"]
+});
+
+const getTopCoinsForTradingViewCached = unstable_cache(getTopCoinsForTradingViewUncached, ["tv-top-coins"], {
+  revalidate: 1800,
+  tags: ["tv-top-coins"]
+});
+
+const getCmcIndicatorsCached = unstable_cache(getCmcIndicatorsUncached, ["cmc-indicators"], {
+  revalidate: 300,
+  tags: ["cmc-indicators"]
+});
+
+export async function getMarketSnapshot() {
+  return getMarketSnapshotCached();
+}
+
+export async function getTopCoinsForTradingView(): Promise<TopCoinForTv[]> {
+  return getTopCoinsForTradingViewCached();
+}
+
+export async function getCmcIndicators(): Promise<CmcIndicators> {
+  return getCmcIndicatorsCached();
 }
