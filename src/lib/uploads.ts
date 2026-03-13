@@ -2,6 +2,12 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 
+function getUploadStorageRoot() {
+  return process.env.UPLOAD_STORAGE_DIR
+    ? path.resolve(process.env.UPLOAD_STORAGE_DIR)
+    : path.join(process.cwd(), ".uploads");
+}
+
 function getExtension(file: File) {
   const fromName = file.name.split(".").pop()?.toLowerCase();
   if (fromName && fromName.length <= 5) return fromName;
@@ -21,7 +27,7 @@ export async function saveImageUpload(file: File | null, folder: string) {
   if (!file || file.size === 0) return null;
   if (!file.type.startsWith("image/")) return null;
 
-  const dir = path.join(process.cwd(), "public", "uploads", folder);
+  const dir = path.join(getUploadStorageRoot(), folder);
   await mkdir(dir, { recursive: true });
 
   const ext = getExtension(file);
@@ -52,7 +58,7 @@ export async function saveVideoUpload(file: File | null, folder: string) {
   if (!file || file.size === 0) return null;
   if (!file.type.startsWith("video/")) return null;
 
-  const dir = path.join(process.cwd(), "public", "uploads", folder);
+  const dir = path.join(getUploadStorageRoot(), folder);
   await mkdir(dir, { recursive: true });
 
   const ext = getVideoExtension(file);
