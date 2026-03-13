@@ -19,7 +19,7 @@ export default async function AltStoreAdminPage() {
       <div className="mx-auto w-full max-w-6xl space-y-5">
         <div>
           <h1 className="font-serif text-4xl">Admin da Loja</h1>
-          <p className="mt-2 text-zinc-300">Edite nome, preço, descrição, imagem, vídeo e link Hotmart de cada produto.</p>
+          <p className="mt-2 text-zinc-300">Edite nome, preço, descrição, imagem, vídeo e link Monetizze de cada produto.</p>
         </div>
         <StoreAdminProductEditor initialProducts={products} initialSiteContent={siteContent} loginPath="/admin-loja/login" />
       </div>

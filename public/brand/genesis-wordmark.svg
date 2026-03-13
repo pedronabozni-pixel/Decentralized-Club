@@ -1,0 +1,23 @@
+<svg width="520" height="120" viewBox="0 0 520 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gold" x1="30" y1="18" x2="500" y2="102" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f7dfa7"/>
+      <stop offset="0.35" stop-color="#d7a94f"/>
+      <stop offset="0.7" stop-color="#b98229"/>
+      <stop offset="1" stop-color="#f6dfa8"/>
+    </linearGradient>
+    <filter id="logoGlow" x="0" y="0" width="520" height="120" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="1.8" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 0.72 0 0 0  0 0 0.3 0 0  0 0 0 0.9 0"/>
+      <feBlend mode="screen" in2="SourceGraphic"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#logoGlow)">
+    <path d="M30 60C30 47.8497 39.8497 38 52 38C64.8 38 71.2 52.2 79 60C86.8 67.8 93.2 82 106 82" stroke="url(#gold)" stroke-width="4.8" stroke-linecap="round"/>
+    <path d="M138 60C138 47.8497 128.15 38 116 38C103.2 38 96.8 52.2 89 60C81.2 67.8 74.8 82 62 82" stroke="url(#gold)" stroke-width="4.8" stroke-linecap="round"/>
+
+    <text x="164" y="67" fill="url(#gold)" font-family="Georgia, 'Times New Roman', serif" font-size="52" letter-spacing="0.5">Genesis</text>
+    <text x="166" y="89" fill="url(#gold)" font-family="Georgia, 'Times New Roman', serif" font-size="17" letter-spacing="7">DISTRIBUIDORA</text>
+  </g>
+</svg>

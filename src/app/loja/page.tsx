@@ -23,11 +23,11 @@ export default async function StoreHomePage() {
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-amber-300">Entrega rápida</p>
-          <p className="mt-1 text-zinc-200">Envio para toda a grande São Paulo</p>
+          <p className="mt-1 text-zinc-200">Vendas para todo o Brasil</p>
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-amber-300">Compra segura</p>
-          <p className="mt-1 text-zinc-200">Checkout externo via Hotmart para maior confiança.</p>
+          <p className="mt-1 text-zinc-200">Checkout externo via Monetizze para maior confiança.</p>
         </div>
       </section>
 

@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     description: String(body.description ?? "Descrição completa do produto."),
     image: String(body.image ?? ""),
     videoUrl: String(body.videoUrl ?? ""),
-    hotmartUrl: String(body.hotmartUrl ?? "https://go.hotmart.com/SEULINK"),
+    hotmartUrl: String(body.hotmartUrl ?? "https://app.monetizze.com.br/checkout/SEULINK"),
     rating: Number(body.rating ?? 5),
     reviewsCount: Number(body.reviewsCount ?? 1),
     features: Array.isArray(body.features) ? body.features : ["Novo diferencial do produto"],

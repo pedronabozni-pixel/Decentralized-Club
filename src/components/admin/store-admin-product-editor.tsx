@@ -94,7 +94,7 @@ export function StoreAdminProductEditor({
         description: "Descrição completa do produto.",
         image: "",
         videoUrl: "",
-        hotmartUrl: "https://go.hotmart.com/SEULINK",
+        hotmartUrl: "https://app.monetizze.com.br/checkout/SEULINK",
         rating: 5,
         reviewsCount: 1,
         features: ["Novo diferencial do produto"],
@@ -456,7 +456,7 @@ export function StoreAdminProductEditor({
             </div>
 
             <label className="text-sm text-zinc-300 md:col-span-2">
-              Link Hotmart
+              Link Monetizze
               <input
                 className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100"
                 onChange={(event) => updateField(index, "hotmartUrl", event.target.value)}
