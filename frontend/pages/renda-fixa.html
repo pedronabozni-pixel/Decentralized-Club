@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Renda Fixa — Decentralized Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/charts.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Renda fixa</div>
+          <h1>Renda Fixa</h1>
+        </div>
+        <button class="btn btn-gold" id="openAddBtn">+ Cadastrar investimento</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid cols-4" id="fixedKpis">
+        <div class="card stat"><span class="accent-line"></span><div class="label">Total investido</div><div class="stat-value serif skeleton">0000</div></div>
+        <div class="card stat"><div class="label">Valor atual</div><div class="stat-value skeleton">0000</div></div>
+        <div class="card stat"><div class="label">Rendimento acumulado</div><div class="stat-value skeleton">0000</div></div>
+        <div class="card stat"><div class="label">Projetado (venc.)</div><div class="stat-value skeleton">0000</div></div>
+      </div>
+
+      <!-- Tabela -->
+      <div class="section-title"><h2>Investimentos</h2><span class="hint" id="selicHint"></span></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Investimento</th><th>Instituicao</th>
+                <th class="num">Valor</th><th class="num">Taxa</th>
+                <th>Aplicacao</th><th>Vencimento</th>
+                <th class="num">Rend. acum.</th><th class="num">Valor atual</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="fixedBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: cadastrar investimento -->
+  <div class="modal-overlay" id="addModal">
+    <div class="card modal pad-lg">
+      <div class="modal-head">
+        <h3>Cadastrar investimento</h3>
+        <button class="modal-close" data-close-modal="addModal">×</button>
+      </div>
+      <form id="addFixedForm">
+        <div class="field-row">
+          <div class="field">
+            <label for="fiType">Tipo</label>
+            <select class="input" id="fiType" required>
+              <option value="CDB">CDB</option>
+              <option value="RDB">RDB</option>
+              <option value="Tesouro">Tesouro Direto</option>
+              <option value="Poupanca">Poupanca</option>
+              <option value="LCI">LCI (isento de IR)</option>
+              <option value="LCA">LCA (isento de IR)</option>
+              <option value="LC">LC</option>
+              <option value="LF">Letra Financeira (LF)</option>
+              <option value="CRI">CRI (isento de IR)</option>
+              <option value="CRA">CRA (isento de IR)</option>
+              <option value="Debenture">Debenture</option>
+              <option value="Debenture Incentivada">Debenture Incentivada (isenta)</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fiBank">Instituicao</label>
+            <input class="input" type="text" id="fiBank" placeholder="Ex: Banco Inter" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="fiDesc">Descricao (opcional)</label>
+          <input class="input" type="text" id="fiDesc" placeholder="Ex: CDB Liquidez Diaria" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fiAmount">Valor investido (R$)</label>
+            <input class="input" type="text" inputmode="decimal" id="fiAmount" placeholder="Ex: 10.000,00" autocomplete="off" required />
+          </div>
+          <div class="field">
+            <label for="fiRate">Taxa (% a.a.)</label>
+            <input class="input" type="text" inputmode="decimal" id="fiRate" placeholder="Ex: 11,5" autocomplete="off" required />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fiDate">Data de aplicacao</label>
+            <input class="input" type="date" id="fiDate" required />
+          </div>
+          <div class="field">
+            <label for="fiMaturity">Vencimento (opcional)</label>
+            <input class="input" type="date" id="fiMaturity" />
+          </div>
+        </div>
+        <div class="flex gap-md mt-lg">
+          <button type="button" class="btn btn-ghost w-full" data-close-modal="addModal">Cancelar</button>
+          <button type="submit" class="btn btn-gold w-full">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api-client.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/fixed-income.js"></script>
+</body>
+</html>

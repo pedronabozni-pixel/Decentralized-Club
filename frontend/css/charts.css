@@ -1,0 +1,22 @@
+/* ==========================================================================
+   Estilos auxiliares para os graficos (Chart.js) e seus containers.
+   ========================================================================== */
+
+.chart-card { display: flex; flex-direction: column; }
+.chart-card .chart-head {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
+}
+.chart-card h3 { font-size: 1.15rem; }
+.chart-box { position: relative; width: 100%; }
+.chart-box.h-tall  { height: 300px; }
+.chart-box.h-mid   { height: 240px; }
+.chart-box.h-pie   { height: 220px; }
+
+.chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
+.chart-legend .item { display: flex; align-items: center; gap: 7px; font-size: 0.82rem; color: var(--color-text-muted); }
+.chart-legend .dot { width: 9px; height: 9px; border-radius: 50%; }
+
+/* Range selector dos graficos */
+.range-tabs { display: flex; gap: 4px; background: var(--color-bg); padding: 4px; border-radius: 8px; border: 1px solid var(--color-border); }
+.range-tab { padding: 5px 12px; font-size: 0.78rem; font-weight: 600; color: var(--color-text-muted); border-radius: 6px; cursor: pointer; transition: var(--transition); }
+.range-tab.active { background: var(--color-surface-2); color: var(--color-gold); }

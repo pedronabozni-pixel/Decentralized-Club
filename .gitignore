@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets (NUNCA commitar)
+.env
+.env.local
+.env.*.local
+
+# Banco de dados local (SQLite)
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

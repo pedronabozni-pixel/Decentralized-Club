@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ativos — Decentralized Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/charts.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Patrimonio completo</div>
+          <h1>Ativos</h1>
+        </div>
+        <button class="btn btn-gold" id="openAddBtn">+ Cadastrar ativo</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid cols-3" id="assetKpis">
+        <div class="card stat"><span class="accent-line"></span><div class="label">Valor atual</div><div class="stat-value serif skeleton">0000</div></div>
+        <div class="card stat"><div class="label">Investido</div><div class="stat-value skeleton">0000</div></div>
+        <div class="card stat"><div class="label">Ganho/Perda</div><div class="stat-value skeleton">0000</div></div>
+      </div>
+
+      <!-- Lista agrupada por classe -->
+      <div id="assetGroups" class="mt-lg"></div>
+    </main>
+  </div>
+
+  <!-- Modal: cadastrar ativo -->
+  <div class="modal-overlay" id="addModal">
+    <div class="card modal pad-lg">
+      <div class="modal-head">
+        <h3>Cadastrar ativo</h3>
+        <button class="modal-close" data-close-modal="addModal">×</button>
+      </div>
+      <form id="addAssetForm">
+        <div class="field">
+          <label for="astCategory">Categoria</label>
+          <select class="input" id="astCategory" required></select>
+          <div class="help" id="categoryHint"></div>
+        </div>
+        <div class="field">
+          <label for="astName">Nome</label>
+          <input class="input" type="text" id="astName" placeholder="Ex: PETR4, Apartamento Centro, Fundo XP..." required />
+        </div>
+        <div class="field-row" id="tickerRow">
+          <div class="field">
+            <label for="astTicker">Ticker / Codigo</label>
+            <input class="input" type="text" id="astTicker" placeholder="Ex: PETR4, AAPL, USD" autocomplete="off" />
+            <div class="help" id="tickerHint"></div>
+          </div>
+          <div class="field">
+            <label for="astQty">Quantidade</label>
+            <input class="input" type="text" inputmode="decimal" id="astQty" placeholder="Ex: 100" autocomplete="off" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="astInvested">Total investido (R$)</label>
+            <input class="input" type="text" inputmode="decimal" id="astInvested" placeholder="Ex: 10.000,00" autocomplete="off" required />
+          </div>
+          <div class="field" id="currentValueField">
+            <label for="astCurrentValue">Valor atual (R$)</label>
+            <input class="input" type="text" inputmode="decimal" id="astCurrentValue" placeholder="Opcional" autocomplete="off" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="astDate">Data da compra</label>
+            <input class="input" type="date" id="astDate" />
+          </div>
+          <div class="field">
+            <label for="astNotes">Observacoes</label>
+            <input class="input" type="text" id="astNotes" placeholder="Opcional" />
+          </div>
+        </div>
+        <div class="flex gap-md mt-lg">
+          <button type="button" class="btn btn-ghost w-full" data-close-modal="addModal">Cancelar</button>
+          <button type="submit" class="btn btn-gold w-full">Salvar ativo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: atualizar valor atual -->
+  <div class="modal-overlay" id="valueModal">
+    <div class="card modal pad-lg" style="max-width:400px;">
+      <div class="modal-head">
+        <h3>Atualizar valor</h3>
+        <button class="modal-close" data-close-modal="valueModal">×</button>
+      </div>
+      <form id="valueForm">
+        <input type="hidden" id="valAssetId" />
+        <p class="text-muted" style="margin-bottom:16px;font-size:.9rem;" id="valAssetName"></p>
+        <div class="field">
+          <label for="valCurrent">Valor atual (R$)</label>
+          <input class="input" type="text" inputmode="decimal" id="valCurrent" placeholder="Ex: 350.000,00" autocomplete="off" required />
+        </div>
+        <div class="flex gap-md">
+          <button type="button" class="btn btn-ghost w-full" data-close-modal="valueModal">Cancelar</button>
+          <button type="submit" class="btn btn-gold w-full">Atualizar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api-client.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/assets.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decentralized Club — Acesso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <main class="auth-screen">
+    <div class="auth-card card pad-lg">
+      <div class="auth-brand">
+        <div class="mark">Decentralized<span>.</span></div>
+        <div class="sub">Club · Wealth Management</div>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" data-tab="login">Entrar</div>
+        <div class="auth-tab" data-tab="register">Criar conta</div>
+      </div>
+
+      <!-- Login -->
+      <form id="loginForm">
+        <div class="field">
+          <label for="loginEmail">E-mail</label>
+          <input class="input" type="email" id="loginEmail" placeholder="voce@email.com" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="loginPassword">Senha</label>
+          <input class="input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <button class="btn btn-gold w-full" type="submit">Acessar plataforma</button>
+      </form>
+
+      <!-- Registro -->
+      <form id="registerForm" class="hidden">
+        <div class="field">
+          <label for="regName">Nome</label>
+          <input class="input" type="text" id="regName" placeholder="Seu nome" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="regEmail">E-mail</label>
+          <input class="input" type="email" id="regEmail" placeholder="voce@email.com" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="regPassword">Senha</label>
+          <input class="input" type="password" id="regPassword" placeholder="Min. 8 caracteres" autocomplete="new-password" required />
+          <div class="help">Use ao menos 8 caracteres.</div>
+        </div>
+        <button class="btn btn-gold w-full" type="submit">Criar conta</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="/js/api-client.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "decentralized-club",
+  "version": "1.0.0",
+  "description": "Plataforma de gestao de carteira de investimentos (cripto + renda fixa) - Decentralized Club",
+  "type": "module",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "migrate": "node backend/db/migrate.js",
+    "seed": "node backend/db/seed.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.24.1"
+  },
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Decentralized Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/charts.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Visao geral</div>
+          <h1>Dashboard</h1>
+        </div>
+        <div class="meta" id="marketMeta">Carregando mercado…</div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid cols-4" id="kpis">
+        <div class="card stat"><span class="accent-line"></span><div class="label">Patrimonio total</div><div class="stat-value serif skeleton">000000</div></div>
+        <div class="card stat"><div class="label">Ganho/Perda do dia</div><div class="stat-value skeleton">000000</div></div>
+        <div class="card stat"><div class="label">Ganho/Perda total</div><div class="stat-value skeleton">000000</div></div>
+        <div class="card stat"><div class="label">Investido</div><div class="stat-value skeleton">000000</div></div>
+      </div>
+
+      <!-- Evolucao + Distribuicao -->
+      <div class="grid cols-2 mt-lg" style="grid-template-columns: 1.6fr 1fr;">
+        <div class="card chart-card pad-lg">
+          <div class="chart-head">
+            <h3>Evolucao do patrimonio</h3>
+            <div class="range-tabs" id="rangeTabs">
+              <div class="range-tab" data-days="7">7D</div>
+              <div class="range-tab active" data-days="30">30D</div>
+              <div class="range-tab" data-days="90">90D</div>
+            </div>
+          </div>
+          <div class="chart-box h-tall"><canvas id="evolutionChart"></canvas></div>
+        </div>
+
+        <div class="card chart-card pad-lg">
+          <div class="chart-head"><h3>Distribuicao</h3></div>
+          <div class="chart-box h-pie"><canvas id="allocChart"></canvas></div>
+          <div id="allocLegend" style="margin-top:20px;"></div>
+        </div>
+      </div>
+
+      <!-- Posicoes resumidas + comparativo -->
+      <div class="grid cols-2 mt-lg" style="grid-template-columns: 1.6fr 1fr;">
+        <div class="card pad-lg">
+          <div class="section-title" style="margin:0 0 14px;">
+            <h2 style="font-size:1.25rem;">Principais posicoes</h2>
+            <a class="hint text-gold" href="criptomoedas.html">Ver todas →</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Ativo</th><th class="num">Preco medio</th><th class="num">Atual</th><th class="num">Ganho/Perda</th></tr>
+              </thead>
+              <tbody id="topPositions"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card chart-card pad-lg">
+          <div class="chart-head"><h3>Cripto vs Renda Fixa</h3></div>
+          <div class="chart-box h-mid"><canvas id="compareChart"></canvas></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/js/api-client.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/charts.js"></script>
+  <script src="/js/realtime.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

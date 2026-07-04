@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador — Decentralized Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/charts.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Renda fixa</div>
+          <h1>Simulador de juros</h1>
+        </div>
+      </div>
+
+      <div class="grid cols-2" style="grid-template-columns: 1fr 1.2fr; align-items:start;">
+        <!-- Form -->
+        <div class="card pad-lg">
+          <h3 style="margin-bottom:20px;">Parametros</h3>
+          <form id="simForm">
+            <div class="field">
+              <label for="simAmount">Valor inicial (R$)</label>
+              <input class="input" type="text" inputmode="decimal" id="simAmount" value="10.000" autocomplete="off" required />
+            </div>
+            <div class="field">
+              <label for="simRate">Taxa (% a.a.)</label>
+              <input class="input" type="text" inputmode="decimal" id="simRate" value="11,5" autocomplete="off" required />
+              <div class="help" id="selicHelp">—</div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="simPeriod">Periodo</label>
+                <input class="input" type="number" id="simPeriod" min="1" value="12" required />
+              </div>
+              <div class="field">
+                <label for="simUnit">Unidade</label>
+                <select class="input" id="simUnit">
+                  <option value="30">Meses</option>
+                  <option value="365">Anos</option>
+                  <option value="1">Dias</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="simType">Tipo (define o IR)</label>
+              <select class="input" id="simType">
+                <option value="CDB">CDB / Tesouro / LC (IR regressivo)</option>
+                <option value="LCI">LCI / LCA (isento de IR)</option>
+                <option value="Poupanca">Poupanca (isento de IR)</option>
+              </select>
+            </div>
+            <button class="btn btn-gold w-full mt-lg" type="submit">Simular</button>
+          </form>
+        </div>
+
+        <!-- Resultado -->
+        <div class="card pad-lg" id="resultCard">
+          <h3 style="margin-bottom:20px;">Resultado</h3>
+          <div id="simResult">
+            <div class="empty"><div class="ico">∿</div>Preencha os parametros e clique em <strong>Simular</strong>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card pad-lg mt-lg">
+        <p class="text-muted" style="font-size:.86rem;">
+          O calculo usa juros compostos sobre a taxa anual informada, com base de 365 dias corridos.
+          O imposto de renda segue a tabela regressiva da renda fixa
+          (22,5% ate 180 dias · 20% ate 360 · 17,5% ate 720 · 15% acima),
+          exceto LCI/LCA e Poupanca, que sao isentos. Valores estimados, sem considerar IOF, taxas ou come-cotas.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api-client.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/simulador.js"></script>
+</body>
+</html>
