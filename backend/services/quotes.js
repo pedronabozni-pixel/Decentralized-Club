@@ -36,23 +36,62 @@ async function yahooQuote(symbol) {
   });
 }
 
-/** Cotacao de moeda/metal em BRL via AwesomeAPI (ex: EUR, GBP, XAU). */
-async function awesomeQuote(code) {
-  const key = `awe_${code}`;
+/**
+ * Cotacao de moeda em BRL (ex: EUR, GBP).
+ * 1. AwesomeAPI (melhor no Brasil; bloqueia alguns datacenters)
+ * 2. open.er-api.com via taxa cruzada: moeda->USD->BRL
+ */
+async function fxQuoteBrl(code) {
+  const c = code.toUpperCase();
+  const key = `fx_${c}`;
   return cache.getOrSet(key, config.cache.priceTtlSeconds * 4, async () => {
+    // Fonte 1: AwesomeAPI direto em BRL.
     try {
-      const pair = `${code.toUpperCase()}-BRL`;
+      const pair = `${c}-BRL`;
       const res = await fetch(`https://economia.awesomeapi.com.br/json/last/${pair}`, {
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(6000),
       });
-      if (!res.ok) throw new Error(`AwesomeAPI HTTP ${res.status}`);
-      const data = await res.json();
-      const quote = data[pair.replace('-', '')];
-      return quote ? { price: Number(quote.bid), currency: 'BRL' } : null;
+      if (res.ok) {
+        const data = await res.json();
+        const quote = data[pair.replace('-', '')];
+        if (quote) return { price: Number(quote.bid), currency: 'BRL' };
+      }
     } catch (err) {
-      console.warn(`[quotes] AwesomeAPI ${code} indisponivel:`, err.message);
-      return null;
+      console.warn(`[quotes] AwesomeAPI ${c} indisponivel:`, err.message);
     }
+    // Fonte 2: er-api cruzando com o dolar (funciona em qualquer datacenter).
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/USD', {
+        signal: AbortSignal.timeout(6000),
+      });
+      if (!res.ok) throw new Error(`er-api HTTP ${res.status}`);
+      const data = await res.json();
+      const brlPerUsd = Number(data?.rates?.BRL);
+      const codePerUsd = Number(data?.rates?.[c]);
+      if (brlPerUsd && codePerUsd) {
+        return { price: brlPerUsd / codePerUsd, currency: 'BRL' };
+      }
+    } catch (err) {
+      console.warn(`[quotes] er-api ${c} indisponivel:`, err.message);
+    }
+    return null;
+  });
+}
+
+/**
+ * Ouro em BRL por onca troy.
+ * 1. AwesomeAPI XAU-BRL  2. Yahoo GC=F (futuro do ouro em USD) x dolar
+ */
+async function goldQuoteBrl() {
+  return cache.getOrSet('gold_brl', config.cache.priceTtlSeconds * 4, async () => {
+    const viaAwesome = await fxQuoteBrl('XAU');
+    if (viaAwesome) return viaAwesome;
+    const gc = await yahooQuote('GC=F');
+    if (gc?.price) {
+      const usd = await getUsdBrl();
+      return { price: gc.price * usd.rate, currency: 'BRL' };
+    }
+    return null;
   });
 }
 
@@ -79,13 +118,13 @@ export async function getAssetPriceBrl(quoteType, ticker) {
   }
 
   if (quoteType === 'fx') {
-    const q = await awesomeQuote(t);
-    return q ? { priceBrl: q.price, source: 'awesomeapi' } : null;
+    const q = await fxQuoteBrl(t);
+    return q ? { priceBrl: q.price, source: 'fx' } : null;
   }
 
   if (quoteType === 'gold') {
-    const q = await awesomeQuote('XAU');
-    return q ? { priceBrl: q.price, source: 'awesomeapi-xau' } : null;
+    const q = await goldQuoteBrl();
+    return q ? { priceBrl: q.price, source: 'gold' } : null;
   }
 
   return null;
