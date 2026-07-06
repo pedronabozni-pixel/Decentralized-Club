@@ -258,6 +258,17 @@ tbody tr:hover { background: var(--color-surface-2); }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .help { font-size: 0.78rem; color: var(--color-text-faint); margin-top: 6px; }
 
+/* Campo de senha com botao mostrar/ocultar */
+.password-field { position: relative; }
+.password-field .input { padding-right: 72px; }
+.password-toggle {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--color-text-faint);
+  font-size: 0.74rem; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase;
+  cursor: pointer; padding: 6px 8px;
+}
+.password-toggle:hover { color: var(--color-gold); }
+
 /* Autocomplete */
 .autocomplete { position: relative; }
 .autocomplete-list {

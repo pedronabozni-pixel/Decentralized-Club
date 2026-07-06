@@ -27,14 +27,28 @@
     window.location.href = '/pages/dashboard.html';
   }
 
+  // Remove espacos/quebras de linha acidentais (comum ao colar de um chat
+  // ou bloco de notas), sem mexer nos caracteres internos da senha.
+  const cleanPassword = (v) => v.trim();
+
+  // Botao "Mostrar/Ocultar" senha (ajuda a conferir senhas com simbolos).
+  document.querySelectorAll('.password-toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? 'Ocultar' : 'Mostrar';
+    });
+  });
+
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = loginForm.querySelector('button');
+    const btn = loginForm.querySelector('button[type=submit]');
     btn.disabled = true; btn.textContent = 'Entrando...';
     try {
       const res = await window.API.login(
         document.getElementById('loginEmail').value.trim(),
-        document.getElementById('loginPassword').value
+        cleanPassword(document.getElementById('loginPassword').value)
       );
       onSuccess(res);
     } catch (err) {
@@ -45,13 +59,13 @@
 
   registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = registerForm.querySelector('button');
+    const btn = registerForm.querySelector('button[type=submit]');
     btn.disabled = true; btn.textContent = 'Criando...';
     try {
       const res = await window.API.register({
         name: document.getElementById('regName').value.trim() || undefined,
         email: document.getElementById('regEmail').value.trim(),
-        password: document.getElementById('regPassword').value,
+        password: cleanPassword(document.getElementById('regPassword').value),
       });
       onSuccess(res);
     } catch (err) {
