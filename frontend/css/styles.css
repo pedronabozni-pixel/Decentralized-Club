@@ -166,6 +166,9 @@ a { color: inherit; text-decoration: none; }
 .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
 .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+/* Layouts assimetricos (não usar style inline: quebra o responsivo) */
+.grid.split-wide { grid-template-columns: 1.6fr 1fr; }
+.grid.split-mid  { grid-template-columns: 1.4fr 1fr; }
 
 /* Stat card (KPIs do dashboard) */
 .stat { position: relative; overflow: hidden; }
@@ -368,6 +371,7 @@ tbody tr:hover { background: var(--color-surface-2); }
 @media (max-width: 980px) {
   .grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
   .grid.cols-3 { grid-template-columns: 1fr; }
+  .grid.split-wide, .grid.split-mid { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
   .app { flex-direction: column; }

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valuation — Decentralized Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/charts.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Analise</div>
+          <h1>Valuation de empresas</h1>
+        </div>
+      </div>
+
+      <!-- Metodo -->
+      <div class="range-tabs" id="methodTabs" style="display:inline-flex;margin-bottom:24px;">
+        <div class="range-tab active" data-method="dcf">Fluxo de Caixa (DCF)</div>
+        <div class="range-tab" data-method="multiples">Multiplos</div>
+        <div class="range-tab" data-method="graham">Graham</div>
+        <div class="range-tab" data-method="gordon">Dividendos (Gordon)</div>
+      </div>
+
+      <div class="grid split-mid" style="align-items:start;">
+        <!-- Formularios -->
+        <div class="card pad-lg">
+          <!-- DCF -->
+          <form id="formDcf" class="method-form">
+            <h3 style="margin-bottom:6px;">Fluxo de Caixa Descontado</h3>
+            <p class="text-muted" style="font-size:.84rem;margin-bottom:20px;">
+              Projeta os fluxos de caixa futuros e traz a valor presente. O metodo
+              mais usado para empresas em operacao.
+            </p>
+            <div class="field">
+              <label for="dcfFcf">Fluxo de caixa livre anual (R$)</label>
+              <input class="input" type="text" inputmode="decimal" id="dcfFcf" placeholder="Ex: 500.000" autocomplete="off" required />
+              <div class="help">Lucro operacional + depreciacao − capex − variacao de capital de giro (ou lucro liquido como aproximacao)</div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="dcfGrowth">Crescimento anos 1-5 (% a.a.)</label>
+                <input class="input" type="text" inputmode="decimal" id="dcfGrowth" value="10" autocomplete="off" />
+              </div>
+              <div class="field">
+                <label for="dcfPerp">Crescimento perpetuo (% a.a.)</label>
+                <input class="input" type="text" inputmode="decimal" id="dcfPerp" value="3" autocomplete="off" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="dcfDiscount">Taxa de desconto (% a.a.)</label>
+              <input class="input" type="text" inputmode="decimal" id="dcfDiscount" value="15" autocomplete="off" />
+              <div class="help">Quanto maior o risco do negocio, maior a taxa. Referencia: SELIC + premio de risco (5-10pp)</div>
+            </div>
+            <div class="field">
+              <label for="dcfDebt">Divida liquida (R$, opcional)</label>
+              <input class="input" type="text" inputmode="decimal" id="dcfDebt" placeholder="0" autocomplete="off" />
+            </div>
+            <button class="btn btn-gold w-full" type="submit">Calcular valuation</button>
+          </form>
+
+          <!-- Multiplos -->
+          <form id="formMultiples" class="method-form hidden">
+            <h3 style="margin-bottom:6px;">Multiplos de mercado</h3>
+            <p class="text-muted" style="font-size:.84rem;margin-bottom:20px;">
+              Compara com quanto o mercado paga por empresas semelhantes.
+              Rapido e util como sanidade do DCF.
+            </p>
+            <div class="field">
+              <label for="mulProfit">Lucro liquido anual (R$)</label>
+              <input class="input" type="text" inputmode="decimal" id="mulProfit" placeholder="Ex: 300.000" autocomplete="off" required />
+            </div>
+            <div class="field">
+              <label for="mulPe">Multiplo P/L</label>
+              <input class="input" type="text" inputmode="decimal" id="mulPe" value="8" autocomplete="off" />
+              <div class="help">Referencias: negocios pequenos 3-6x · empresas medias 6-12x · techs em crescimento 12-25x</div>
+            </div>
+            <div class="field">
+              <label for="mulDebt">Divida liquida (R$, opcional)</label>
+              <input class="input" type="text" inputmode="decimal" id="mulDebt" placeholder="0" autocomplete="off" />
+            </div>
+            <button class="btn btn-gold w-full" type="submit">Calcular valuation</button>
+          </form>
+
+          <!-- Graham -->
+          <form id="formGraham" class="method-form hidden">
+            <h3 style="margin-bottom:6px;">Formula de Graham</h3>
+            <p class="text-muted" style="font-size:.84rem;margin-bottom:20px;">
+              Valor intrinseco de uma acao: √(22,5 × LPA × VPA). Criada por
+              Benjamin Graham, mentor de Warren Buffett. Ideal para acoes da bolsa.
+            </p>
+            <div class="field-row">
+              <div class="field">
+                <label for="grahamLpa">LPA — lucro por acao (R$)</label>
+                <input class="input" type="text" inputmode="decimal" id="grahamLpa" placeholder="Ex: 4,50" autocomplete="off" required />
+              </div>
+              <div class="field">
+                <label for="grahamVpa">VPA — valor patrimonial/acao (R$)</label>
+                <input class="input" type="text" inputmode="decimal" id="grahamVpa" placeholder="Ex: 25,00" autocomplete="off" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="grahamPrice">Preco atual da acao (R$, opcional)</label>
+              <input class="input" type="text" inputmode="decimal" id="grahamPrice" placeholder="Para calcular a margem de seguranca" autocomplete="off" />
+            </div>
+            <button class="btn btn-gold w-full" type="submit">Calcular valor intrinseco</button>
+          </form>
+
+          <!-- Gordon -->
+          <form id="formGordon" class="method-form hidden">
+            <h3 style="margin-bottom:6px;">Modelo de Gordon (dividendos)</h3>
+            <p class="text-muted" style="font-size:.84rem;margin-bottom:20px;">
+              Preco justo = dividendo do proximo ano ÷ (retorno exigido − crescimento).
+              Ideal para pagadoras de dividendos estaveis (bancos, energia, FIIs).
+            </p>
+            <div class="field">
+              <label for="gordonDiv">Dividendo anual por acao (R$)</label>
+              <input class="input" type="text" inputmode="decimal" id="gordonDiv" placeholder="Ex: 2,80" autocomplete="off" required />
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="gordonR">Retorno exigido (% a.a.)</label>
+                <input class="input" type="text" inputmode="decimal" id="gordonR" value="14" autocomplete="off" />
+              </div>
+              <div class="field">
+                <label for="gordonG">Crescimento dos dividendos (% a.a.)</label>
+                <input class="input" type="text" inputmode="decimal" id="gordonG" value="4" autocomplete="off" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="gordonPrice">Preco atual da acao (R$, opcional)</label>
+              <input class="input" type="text" inputmode="decimal" id="gordonPrice" placeholder="Para comparar com o preco justo" autocomplete="off" />
+            </div>
+            <button class="btn btn-gold w-full" type="submit">Calcular preco justo</button>
+          </form>
+        </div>
+
+        <!-- Resultado -->
+        <div class="card pad-lg">
+          <h3 style="margin-bottom:20px;">Resultado</h3>
+          <div id="valResult">
+            <div class="empty"><div class="ico">⚖</div>Preencha os dados e calcule.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card pad-lg mt-lg">
+        <p class="text-muted" style="font-size:.84rem;">
+          Ferramenta educacional de estimativa. Valuation depende de premissas —
+          teste cenarios conservadores e otimistas. Nao constitui recomendacao de
+          compra ou venda de ativos.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api-client.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/valuation.js"></script>
+</body>
+</html>

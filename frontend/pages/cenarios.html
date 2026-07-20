@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cenarios — Decentralized Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/charts.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Teste de estresse</div>
+          <h1>Cenarios</h1>
+        </div>
+        <div class="meta">E se o mercado virar?<br>Simule crises na sua carteira real.</div>
+      </div>
+
+      <!-- Score de resiliencia -->
+      <div class="grid cols-3" id="scoreRow">
+        <div class="card stat"><span class="accent-line"></span><div class="label">Score de resiliencia</div><div class="stat-value serif skeleton">00</div></div>
+        <div class="card stat"><div class="label">Patrimonio atual</div><div class="stat-value skeleton">0000</div></div>
+        <div class="card stat"><div class="label">Perda em crise severa</div><div class="stat-value skeleton">0000</div></div>
+      </div>
+
+      <!-- Presets -->
+      <div class="section-title"><h2>Escolha o cenario</h2><span class="hint">ou ajuste os choques manualmente</span></div>
+      <div class="range-tabs" id="presetTabs" style="display:inline-flex;flex-wrap:wrap;margin-bottom:24px;">
+        <div class="range-tab active" data-preset="crise2008">Crise global (2008)</div>
+        <div class="range-tab" data-preset="cryptowinter">Inverno cripto</div>
+        <div class="range-tab" data-preset="dolarforte">Dolar disparando</div>
+        <div class="range-tab" data-preset="inflacao">Inflacao alta</div>
+        <div class="range-tab" data-preset="custom">Personalizado</div>
+      </div>
+
+      <div class="grid split-mid" style="align-items:start;">
+        <!-- Sliders -->
+        <div class="card pad-lg">
+          <h3 style="margin-bottom:6px;">Choques por classe</h3>
+          <p class="text-muted" style="font-size:.84rem;margin-bottom:20px;" id="presetDesc"></p>
+          <div id="shockSliders"></div>
+        </div>
+
+        <!-- Resultado -->
+        <div class="card pad-lg">
+          <h3 style="margin-bottom:20px;">Impacto na sua carteira</h3>
+          <div id="impactResult">
+            <div class="empty"><div class="ico">∆</div>Carregando sua carteira…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card pad-lg mt-lg">
+        <p class="text-muted" style="font-size:.84rem;">
+          <strong class="text-gold">Como funciona o Score de Resiliencia:</strong>
+          70% mede quanto do seu patrimonio sobreviveria a uma crise severa
+          (bolsas -40%, cripto -60%, imoveis -15%) e 30% mede a diversificacao
+          entre classes. Simulacao educacional sobre os seus dados reais — nao
+          e recomendacao de investimento.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api-client.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/cenarios.js"></script>
+</body>
+</html>

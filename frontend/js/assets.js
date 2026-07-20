@@ -219,5 +219,28 @@
     } catch (err) { window.App.toast(err.message, 'error'); }
   });
 
+  // ---------- Exportar CSV ----------
+  document.getElementById('exportBtn')?.addEventListener('click', async () => {
+    try {
+      const { items } = await window.API.assets();
+      if (!items.length) { window.App.toast('Nada para exportar ainda.', 'error'); return; }
+      window.App.downloadCSV('ativos.csv', items.map((a) => ({
+        group: a.categoryGroup,
+        category: a.categoryLabel,
+        name: a.name,
+        ticker: a.ticker || '',
+        quantity: a.quantity != null ? String(a.quantity).replace('.', ',') : '',
+        invested: String(a.invested).replace('.', ','),
+        current: String(a.currentValueBrl.toFixed(2)).replace('.', ','),
+        gain: String(a.gainLoss.toFixed(2)).replace('.', ','),
+      })), {
+        group: 'Grupo', category: 'Categoria', name: 'Nome', ticker: 'Ticker',
+        quantity: 'Qtd', invested: 'Investido (R$)', current: 'Valor atual (R$)',
+        gain: 'Ganho/Perda (R$)',
+      });
+      window.App.toast('CSV exportado!', 'success');
+    } catch (err) { window.App.toast(err.message, 'error'); }
+  });
+
   init();
 })();

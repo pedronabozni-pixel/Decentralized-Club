@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metas — Decentralized Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/charts.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Planejamento</div>
+          <h1>Metas futuras</h1>
+        </div>
+        <button class="btn btn-gold" id="openAddBtn">+ Nova meta</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid cols-3" id="goalKpis">
+        <div class="card stat"><span class="accent-line"></span><div class="label">Soma das metas</div><div class="stat-value serif skeleton">0000</div></div>
+        <div class="card stat"><div class="label">Ja reservado</div><div class="stat-value skeleton">0000</div></div>
+        <div class="card stat"><div class="label">Aporte mensal necessario</div><div class="stat-value skeleton">0000</div></div>
+      </div>
+
+      <!-- Cards de metas -->
+      <div id="goalsList" class="grid cols-2 mt-lg"></div>
+    </main>
+  </div>
+
+  <!-- Modal: nova meta -->
+  <div class="modal-overlay" id="addModal">
+    <div class="card modal pad-lg">
+      <div class="modal-head">
+        <h3>Nova meta</h3>
+        <button class="modal-close" data-close-modal="addModal">×</button>
+      </div>
+      <form id="addGoalForm">
+        <div class="field">
+          <label for="goalName">Nome da meta</label>
+          <input class="input" type="text" id="goalName" placeholder="Ex: Aposentadoria, Casa na praia, Reserva 12 meses" required />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="goalTarget">Valor da meta (R$)</label>
+            <input class="input" type="text" inputmode="decimal" id="goalTarget" placeholder="Ex: 1.000.000" autocomplete="off" required />
+          </div>
+          <div class="field">
+            <label for="goalDate">Data alvo</label>
+            <input class="input" type="date" id="goalDate" required />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="goalInitial">Quanto ja tem (R$)</label>
+            <input class="input" type="text" inputmode="decimal" id="goalInitial" placeholder="0" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="goalRate">Rendimento esperado (% a.a.)</label>
+            <input class="input" type="text" inputmode="decimal" id="goalRate" value="10" autocomplete="off" />
+            <div class="help" id="goalRateHelp"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="goalNotes">Observacoes (opcional)</label>
+          <input class="input" type="text" id="goalNotes" placeholder="Ex: focar em renda fixa" />
+        </div>
+        <div class="flex gap-md mt-lg">
+          <button type="button" class="btn btn-ghost w-full" data-close-modal="addModal">Cancelar</button>
+          <button type="submit" class="btn btn-gold w-full">Criar meta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: atualizar progresso -->
+  <div class="modal-overlay" id="progressModal">
+    <div class="card modal pad-lg" style="max-width:400px;">
+      <div class="modal-head">
+        <h3>Atualizar progresso</h3>
+        <button class="modal-close" data-close-modal="progressModal">×</button>
+      </div>
+      <form id="progressForm">
+        <input type="hidden" id="progGoalId" />
+        <p class="text-muted" style="margin-bottom:16px;font-size:.9rem;" id="progGoalName"></p>
+        <div class="field">
+          <label for="progValue">Quanto ja tem guardado (R$)</label>
+          <input class="input" type="text" inputmode="decimal" id="progValue" placeholder="Ex: 50.000" autocomplete="off" required />
+        </div>
+        <div class="flex gap-md">
+          <button type="button" class="btn btn-ghost w-full" data-close-modal="progressModal">Cancelar</button>
+          <button type="submit" class="btn btn-gold w-full">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api-client.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/metas.js"></script>
+</body>
+</html>

@@ -67,6 +67,20 @@ CREATE TABLE IF NOT EXISTS assets (
 );
 CREATE INDEX IF NOT EXISTS idx_assets_user ON assets(user_id);
 
+-- Metas financeiras futuras ------------------------------------------------
+CREATE TABLE IF NOT EXISTS goals (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name           TEXT    NOT NULL,          -- ex: "Aposentadoria", "Casa na praia"
+  target_amount  REAL    NOT NULL CHECK (target_amount > 0),  -- em BRL
+  target_date    TEXT    NOT NULL,          -- ISO date
+  expected_rate  REAL    NOT NULL DEFAULT 10, -- % a.a. esperada
+  initial_amount REAL    NOT NULL DEFAULT 0,  -- quanto ja tem p/ essa meta (BRL)
+  notes          TEXT,
+  created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id);
+
 -- Historico de precos (para grafico de evolucao do patrimonio) -------------
 CREATE TABLE IF NOT EXISTS price_history (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,

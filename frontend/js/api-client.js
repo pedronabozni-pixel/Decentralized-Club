@@ -91,5 +91,9 @@
     addAsset: (a) => request('POST', '/assets', a),
     updateAssetValue: (id, currentValue) => request('PATCH', `/assets/${id}/value`, { currentValue }),
     deleteAsset: (id) => request('DELETE', `/assets/${id}`),
+    goals: () => request('GET', '/goals'),
+    addGoal: (g) => request('POST', '/goals', g),
+    updateGoalProgress: (id, initialAmount) => request('PATCH', `/goals/${id}/progress`, { initialAmount }),
+    deleteGoal: (id) => request('DELETE', `/goals/${id}`),
   };
 })();

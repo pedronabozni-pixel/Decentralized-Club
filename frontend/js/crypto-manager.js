@@ -326,5 +326,25 @@
     }
   });
 
+  // ---------- Exportar CSV ----------
+  document.getElementById('exportBtn')?.addEventListener('click', async () => {
+    try {
+      const { buys } = await window.API.cryptoBuys();
+      if (!buys.length) { window.App.toast('Nada para exportar ainda.', 'error'); return; }
+      window.App.downloadCSV('compras-cripto.csv', buys.map((b) => ({
+        symbol: b.crypto_symbol,
+        name: b.crypto_name || '',
+        date: b.date_bought,
+        quantity: String(b.quantity).replace('.', ','),
+        priceUsd: String(b.price_per_unit).replace('.', ','),
+        totalUsd: String(b.total_spent).replace('.', ','),
+      })), {
+        symbol: 'Simbolo', name: 'Moeda', date: 'Data',
+        quantity: 'Quantidade', priceUsd: 'Preco (US$)', totalUsd: 'Total (US$)',
+      });
+      window.App.toast('CSV exportado!', 'success');
+    } catch (err) { window.App.toast(err.message, 'error'); }
+  });
+
   loadPositions();
 })();

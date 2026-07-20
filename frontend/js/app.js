@@ -72,6 +72,9 @@
         { href: 'criptomoedas.html', ico: '₿', label: 'Criptomoedas' },
         { href: 'renda-fixa.html', ico: '▦', label: 'Renda Fixa' },
         { href: 'ativos.html', ico: '◆', label: 'Ativos' },
+        { href: 'metas.html', ico: '◎', label: 'Metas' },
+        { href: 'valuation.html', ico: '⚖', label: 'Valuation' },
+        { href: 'cenarios.html', ico: '∆', label: 'Cenarios' },
         { href: 'simulador.html', ico: '∿', label: 'Simulador' },
       ];
       const nav = links.map((l) => `
@@ -122,6 +125,28 @@
 
     // Badge de 2-3 letras para a moeda
     symBadge: (sym) => sym.slice(0, 4),
+
+    /**
+     * Exporta linhas para CSV (separador ; — padrao Excel pt-BR) e baixa.
+     * rows: array de objetos; headers: { chave: 'Rotulo' }.
+     */
+    downloadCSV(filename, rows, headers) {
+      const keys = Object.keys(headers);
+      const esc = (v) => {
+        const s = String(v ?? '');
+        return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const lines = [
+        keys.map((k) => esc(headers[k])).join(';'),
+        ...rows.map((r) => keys.map((k) => esc(r[k])).join(';')),
+      ];
+      const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    },
 
     // Pill de variacao
     deltaPill(value, isPercent = true) {

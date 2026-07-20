@@ -7,6 +7,21 @@ export const priceHistoryRepo = {
       .run(symbol, price);
   },
 
+  /**
+   * Grava no maximo 1 registro por simbolo a cada `minMinutes` — evita
+   * inflar a tabela a cada refresh do dashboard.
+   */
+  recordThrottled(symbol, price, minMinutes = 60) {
+    const last = db
+      .prepare(`
+        SELECT date FROM price_history
+        WHERE crypto_symbol = ? AND date >= datetime('now', ?)
+        LIMIT 1
+      `)
+      .get(symbol, `-${minMinutes} minutes`);
+    if (!last) this.record(symbol, price);
+  },
+
   // Ultimos N dias de um simbolo.
   recent(symbol, days = 30) {
     return db

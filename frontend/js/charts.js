@@ -32,41 +32,57 @@
   }
 
   const Charts = {
-    // Linha: evolucao do patrimonio.
-    line(canvasId, labels, values, { color = GOLD } = {}) {
+    // Linha: evolucao do patrimonio (+ serie de comparacao opcional, ex: CDI).
+    line(canvasId, labels, values, { color = GOLD, compare = null } = {}) {
       applyDefaults();
       destroy(canvasId);
       const el = document.getElementById(canvasId);
       if (!el) return;
+      const datasets = [{
+        label: compare ? 'Patrimonio' : '',
+        data: values,
+        borderColor: color,
+        borderWidth: 2,
+        tension: 0.32,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: color,
+        fill: true,
+        backgroundColor: (c) => {
+          const { ctx, chartArea } = c.chart;
+          if (!chartArea) return color + '22';
+          return goldGradient(ctx, chartArea, color);
+        },
+      }];
+      if (compare && compare.data?.length) {
+        datasets.push({
+          label: compare.label || 'CDI',
+          data: compare.data,
+          borderColor: TEXT,
+          borderWidth: 1.5,
+          borderDash: [6, 5],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.1,
+        });
+      }
       instances[canvasId] = new Chart(el, {
         type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            data: values,
-            borderColor: color,
-            borderWidth: 2,
-            tension: 0.32,
-            pointRadius: 0,
-            pointHoverRadius: 5,
-            pointHoverBackgroundColor: color,
-            fill: true,
-            backgroundColor: (c) => {
-              const { ctx, chartArea } = c.chart;
-              if (!chartArea) return color + '22';
-              return goldGradient(ctx, chartArea, color);
-            },
-          }],
-        },
+        data: { labels, datasets },
         options: {
           responsive: true, maintainAspectRatio: false,
           interaction: { intersect: false, mode: 'index' },
           plugins: {
-            legend: { display: false },
+            legend: {
+              display: !!compare, position: 'top',
+              labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true },
+            },
             tooltip: {
               backgroundColor: '#161616', borderColor: '#262626', borderWidth: 1,
-              padding: 12, displayColors: false,
-              callbacks: { label: (c) => brl(c.parsed.y) },
+              padding: 12, displayColors: !!compare,
+              callbacks: {
+                label: (c) => (compare ? `${c.dataset.label}: ` : '') + brl(c.parsed.y),
+              },
             },
           },
           scales: {

@@ -71,8 +71,8 @@ router.get('/positions', asyncHandler(async (req, res) => {
   const enriched = positions.map((p) => {
     const market = prices[p.symbol];
     const currentPriceUsd = market ? market.usd : 0;
-    // Registra preco atual (USD) para alimentar o grafico de performance.
-    if (currentPriceUsd > 0) priceHistoryRepo.record(p.symbol, currentPriceUsd);
+    // Registra preco atual (USD) p/ o grafico de performance (max 1x/hora).
+    if (currentPriceUsd > 0) priceHistoryRepo.recordThrottled(p.symbol, currentPriceUsd);
     const pos = buildCryptoPosition(p, currentPriceUsd);
     pos.change24h = market ? market.change24h : 0;
     return pos;

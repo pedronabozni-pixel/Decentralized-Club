@@ -11,6 +11,7 @@ import { getGlobal, getMarketChart } from '../services/coingecko.js';
 import { getUnifiedPrices } from '../services/prices.js';
 import { getUsdBrl } from '../services/dollar.js';
 import { valuateUserAssets } from '../services/assetsValuation.js';
+import { getCdiAccumulated } from '../services/bcb.js';
 import {
   buildCryptoPosition, compoundReturn, daysBetween,
 } from '../services/calculations.js';
@@ -179,7 +180,26 @@ router.get('/evolution', asyncHandler(async (req, res) => {
     };
   });
 
-  res.json({ days, points });
+  // Benchmark: CDI acumulado normalizado para o valor inicial da carteira,
+  // respondendo "e se esse patrimonio estivesse 100% no CDI?".
+  let cdi = [];
+  if (points.length >= 2) {
+    const series = await getCdiAccumulated(days);
+    if (series.length) {
+      const byDate = new Map(series.map((s) => [s.date, s.factor]));
+      const base = points[0].total;
+      let lastFactor = 1;
+      cdi = points.map((p) => {
+        if (byDate.has(p.date)) lastFactor = byDate.get(p.date);
+        return { date: p.date, value: base * lastFactor };
+      });
+      // Normaliza para comecar exatamente no valor base.
+      const first = cdi[0].value;
+      if (first > 0) cdi = cdi.map((c) => ({ ...c, value: (c.value / first) * base }));
+    }
+  }
+
+  res.json({ days, points, cdi });
 }));
 
 export default router;

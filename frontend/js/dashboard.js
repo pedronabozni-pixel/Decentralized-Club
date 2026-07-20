@@ -170,7 +170,7 @@
 
   async function loadEvolution() {
     try {
-      const { points } = await window.API.portfolioEvolution(currentDays);
+      const { points, cdi } = await window.API.portfolioEvolution(currentDays);
       if (!points.length) {
         // Sem historico de cripto disponivel ainda.
         window.Charts.line('evolutionChart', ['—'], [0]);
@@ -180,7 +180,11 @@
         const d = new Date(p.date + 'T00:00:00');
         return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
       });
-      window.Charts.line('evolutionChart', labels, points.map((p) => p.total));
+      // Benchmark: "e se estivesse 100% no CDI?" (diferencial vs apps comuns).
+      const compare = (cdi && cdi.length === points.length)
+        ? { label: 'CDI', data: cdi.map((c) => c.value) }
+        : null;
+      window.Charts.line('evolutionChart', labels, points.map((p) => p.total), { compare });
     } catch (err) {
       window.App.toast('Evolucao indisponivel no momento.', 'error');
     }

@@ -20,7 +20,10 @@
           <div class="eyebrow">Carteira digital</div>
           <h1>Criptomoedas</h1>
         </div>
-        <button class="btn btn-gold" id="openAddBtn">+ Adicionar compra</button>
+        <div class="flex gap-sm">
+          <button class="btn btn-ghost" id="exportBtn">Exportar CSV</button>
+          <button class="btn btn-gold" id="openAddBtn">+ Adicionar compra</button>
+        </div>
       </div>
 
       <!-- Resumo cripto -->
@@ -59,7 +62,7 @@
       </div>
 
       <!-- Performance + Historico da moeda selecionada -->
-      <div class="grid cols-2 mt-lg" style="grid-template-columns: 1.4fr 1fr;">
+      <div class="grid split-mid mt-lg">
         <div class="card chart-card pad-lg">
           <div class="chart-head">
             <h3 id="perfTitle">Performance</h3>
