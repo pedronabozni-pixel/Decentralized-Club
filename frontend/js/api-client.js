@@ -89,6 +89,7 @@
     assets: () => request('GET', '/assets'),
     assetCategories: () => request('GET', '/assets/categories'),
     addAsset: (a) => request('POST', '/assets', a),
+    updateAsset: (id, a) => request('PUT', `/assets/${id}`, a),
     updateAssetValue: (id, currentValue) => request('PATCH', `/assets/${id}/value`, { currentValue }),
     deleteAsset: (id) => request('DELETE', `/assets/${id}`),
     goals: () => request('GET', '/goals'),

@@ -25,6 +25,22 @@ export const assetsRepo = {
       .all(userId);
   },
 
+  update(userId, id, { category, name, ticker, quantity, invested, currentValue, purchaseDate, notes }) {
+    const info = db
+      .prepare(`
+        UPDATE assets SET
+          category = ?, name = ?, ticker = ?, quantity = ?,
+          invested = ?, current_value = ?, purchase_date = ?, notes = ?
+        WHERE id = ? AND user_id = ?
+      `)
+      .run(
+        category, name, ticker || null, quantity ?? null,
+        invested, currentValue ?? null, purchaseDate || null, notes || null,
+        id, userId
+      );
+    return info.changes > 0 ? this.findById(userId, id) : null;
+  },
+
   updateCurrentValue(userId, id, currentValue) {
     const info = db
       .prepare(`UPDATE assets SET current_value = ? WHERE id = ? AND user_id = ?`)

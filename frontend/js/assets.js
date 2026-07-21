@@ -9,6 +9,8 @@
   const { fmtBRL, fmtPct, fmtNum, fmtDate, signClass, parseDecimal } = window.App;
 
   let categories = {}; // catalogo vindo do backend
+  let itemsById = new Map(); // ativos carregados (para edicao)
+  let editingId = null; // null = modo cadastro; id = modo edicao
 
   // ---------- Carregar catalogo + lista ----------
   async function init() {
@@ -28,6 +30,7 @@
       window.App.toast(err.message || 'Falha ao carregar ativos.', 'error');
       return;
     }
+    itemsById = new Map(data.items.map((a) => [String(a.id), a]));
     renderKpis(data.summary);
     renderGroups(data.items);
   }
@@ -103,6 +106,45 @@
         setTimeout(() => document.getElementById('valCurrent').focus(), 100);
       });
     });
+    wrap.querySelectorAll('.edit-asset').forEach((btn) => {
+      btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+    });
+  }
+
+  // ---------- Edicao completa de um ativo ja lancado ----------
+  // Formata numero para o campo (padrao pt-BR, que o parseDecimal entende).
+  const toField = (v) => (v == null ? '' : String(v).replace('.', ','));
+
+  function openEditModal(id) {
+    const a = itemsById.get(String(id));
+    if (!a) return;
+    editingId = a.id;
+
+    document.getElementById('astCategory').value = a.category;
+    onCategoryChange();
+    document.getElementById('astName').value = a.name;
+    document.getElementById('astTicker').value = a.ticker || '';
+    document.getElementById('astQty').value = toField(a.quantity);
+    document.getElementById('astInvested').value = toField(a.invested);
+    // current_value cru (manual); nao usa o valor calculado pela cotacao.
+    document.getElementById('astCurrentValue').value = toField(a.current_value);
+    document.getElementById('astDate').value = a.purchase_date || '';
+    document.getElementById('astNotes').value = a.notes || '';
+
+    setModalMode('edit', a.name);
+    window.App.openModal('addModal');
+  }
+
+  function setModalMode(mode, name) {
+    const title = document.querySelector('#addModal .modal-head h3');
+    const submit = document.querySelector('#addAssetForm button[type=submit]');
+    if (mode === 'edit') {
+      title.textContent = `Editar · ${name}`;
+      submit.textContent = 'Salvar alteracoes';
+    } else {
+      title.textContent = 'Cadastrar ativo';
+      submit.textContent = 'Salvar ativo';
+    }
   }
 
   function rowHtml(a) {
@@ -123,7 +165,10 @@
         <td class="num ${signClass(a.gainLoss)}">${fmtBRL(a.gainLoss)}<br>
           <span style="font-size:.78rem;">${fmtPct(a.gainLossPercent)}</span></td>
         <td>${fonte}</td>
-        <td class="num"><button class="btn-icon-danger del-asset" data-id="${a.id}" title="Excluir">✕</button></td>
+        <td class="num" style="white-space:nowrap;">
+          <button class="btn btn-sm btn-ghost edit-asset" data-id="${a.id}" title="Editar">editar</button>
+          <button class="btn-icon-danger del-asset" data-id="${a.id}" title="Excluir">✕</button>
+        </td>
       </tr>`;
   }
 
@@ -163,9 +208,11 @@
 
   // ---------- Cadastrar ----------
   document.getElementById('openAddBtn').addEventListener('click', () => {
+    editingId = null;
     document.getElementById('addAssetForm').reset();
     document.getElementById('astDate').value = new Date().toISOString().slice(0, 10);
     onCategoryChange();
+    setModalMode('create');
     window.App.openModal('addModal');
   });
 
@@ -183,9 +230,10 @@
     if (cvRaw && !(currentValue >= 0)) { window.App.toast('Valor atual invalido.', 'error'); return; }
 
     const btn = e.target.querySelector('button[type=submit]');
+    const isEdit = editingId != null;
     btn.disabled = true; btn.textContent = 'Salvando...';
     try {
-      await window.API.addAsset({
+      const payload = {
         category: document.getElementById('astCategory').value,
         name: document.getElementById('astName').value.trim(),
         ticker: document.getElementById('astTicker').value.trim() || undefined,
@@ -194,15 +242,23 @@
         currentValue: currentValue ?? undefined,
         purchaseDate: document.getElementById('astDate').value || undefined,
         notes: document.getElementById('astNotes').value.trim() || undefined,
-      });
-      window.App.toast('Ativo cadastrado!', 'success');
+      };
+      if (isEdit) {
+        await window.API.updateAsset(editingId, payload);
+        window.App.toast('Ativo atualizado!', 'success');
+      } else {
+        await window.API.addAsset(payload);
+        window.App.toast('Ativo cadastrado!', 'success');
+      }
+      editingId = null;
       window.App.closeModal('addModal');
       load();
     } catch (err) {
       const detail = err.details?.[0]?.message;
       window.App.toast(detail || err.message, 'error');
     } finally {
-      btn.disabled = false; btn.textContent = 'Salvar ativo';
+      btn.disabled = false;
+      btn.textContent = isEdit ? 'Salvar alteracoes' : 'Salvar ativo';
     }
   });
 

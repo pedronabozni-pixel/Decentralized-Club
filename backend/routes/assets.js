@@ -53,6 +53,23 @@ router.post('/', asyncHandler(async (req, res) => {
   res.status(201).json({ item: await enrichAsset(item) });
 }));
 
+// PUT /api/assets/:id -> edicao completa de um ativo ja lancado
+router.put('/:id', asyncHandler(async (req, res) => {
+  const data = validate(assetSchema, req.body);
+  const item = assetsRepo.update(req.user.id, Number(req.params.id), {
+    category: data.category,
+    name: data.name,
+    ticker: data.ticker || null,
+    quantity: data.quantity ?? null,
+    invested: data.invested,
+    currentValue: data.currentValue ?? null,
+    purchaseDate: data.purchaseDate || null,
+    notes: data.notes,
+  });
+  if (!item) return res.status(404).json({ error: 'Ativo nao encontrado.' });
+  res.json({ item: await enrichAsset(item) });
+}));
+
 // PATCH /api/assets/:id/value -> atualiza valor atual (ativos manuais)
 router.patch('/:id/value', asyncHandler(async (req, res) => {
   const value = Number(req.body?.currentValue);
