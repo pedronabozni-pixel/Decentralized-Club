@@ -8,6 +8,9 @@
 
   const { fmtBRL, fmtDate, signClass } = window.App;
 
+  let itemsById = new Map(); // investimentos carregados (para edicao)
+  let editingId = null;      // null = cadastro; id = edicao
+
   async function load() {
     let data;
     try {
@@ -16,6 +19,7 @@
       window.App.toast(err.message || 'Falha ao carregar renda fixa.', 'error');
       return;
     }
+    itemsById = new Map(data.items.map((it) => [String(it.id), it]));
     renderKpis(data.summary);
     renderTable(data.items);
   }
@@ -50,9 +54,15 @@
         <td>${it.maturity_date ? fmtDate(it.maturity_date) : '—'}</td>
         <td class="num positive">${fmtBRL(it.accruedYield)}</td>
         <td class="num">${fmtBRL(it.currentValue)}</td>
-        <td class="num"><button class="btn-icon-danger del-fi" data-id="${it.id}" title="Excluir">✕</button></td>
+        <td class="num" style="white-space:nowrap;">
+          <button class="btn btn-sm btn-ghost edit-fi" data-id="${it.id}" title="Editar">editar</button>
+          <button class="btn-icon-danger del-fi" data-id="${it.id}" title="Excluir">✕</button>
+        </td>
       </tr>`).join('');
 
+    tbody.querySelectorAll('.edit-fi').forEach((btn) => {
+      btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+    });
     tbody.querySelectorAll('.del-fi').forEach((btn) => {
       btn.addEventListener('click', async () => {
         if (!confirm('Excluir este investimento?')) return;
@@ -76,10 +86,41 @@
     } catch { /* silencioso */ }
   })();
 
-  // ---------- Modal cadastrar ----------
+  // ---------- Modal cadastrar / editar ----------
+  const toField = (v) => (v == null ? '' : String(v).replace('.', ','));
+
+  function setModalMode(mode, label) {
+    const title = document.querySelector('#addModal .modal-head h3');
+    const submit = document.querySelector('#addFixedForm button[type=submit]');
+    if (mode === 'edit') {
+      title.textContent = `Editar · ${label}`;
+      submit.textContent = 'Salvar alteracoes';
+    } else {
+      title.textContent = 'Cadastrar investimento';
+      submit.textContent = 'Salvar';
+    }
+  }
+
+  function openEditModal(id) {
+    const it = itemsById.get(String(id));
+    if (!it) return;
+    editingId = it.id;
+    document.getElementById('fiType').value = it.type;
+    document.getElementById('fiBank').value = it.bank || '';
+    document.getElementById('fiDesc').value = it.description || '';
+    document.getElementById('fiAmount').value = toField(it.amount);
+    document.getElementById('fiRate').value = toField(it.rate);
+    document.getElementById('fiDate').value = it.date_invested;
+    document.getElementById('fiMaturity').value = it.maturity_date || '';
+    setModalMode('edit', it.description || it.type);
+    window.App.openModal('addModal');
+  }
+
   document.getElementById('openAddBtn').addEventListener('click', () => {
+    editingId = null;
     document.getElementById('addFixedForm').reset();
     document.getElementById('fiDate').value = new Date().toISOString().slice(0, 10);
+    setModalMode('create');
     window.App.openModal('addModal');
   });
 
@@ -93,9 +134,10 @@
     if (!(rate >= 0)) { window.App.toast('Taxa invalida.', 'error'); return; }
 
     const btn = e.target.querySelector('button[type=submit]');
+    const isEdit = editingId != null;
     btn.disabled = true; btn.textContent = 'Salvando...';
     try {
-      await window.API.addFixedIncome({
+      const payload = {
         type: document.getElementById('fiType').value,
         bank: document.getElementById('fiBank').value.trim() || undefined,
         description: document.getElementById('fiDesc').value.trim() || undefined,
@@ -103,15 +145,23 @@
         rate,
         dateInvested: document.getElementById('fiDate').value,
         maturityDate: document.getElementById('fiMaturity').value || undefined,
-      });
-      window.App.toast('Investimento cadastrado!', 'success');
+      };
+      if (isEdit) {
+        await window.API.updateFixedIncome(editingId, payload);
+        window.App.toast('Investimento atualizado!', 'success');
+      } else {
+        await window.API.addFixedIncome(payload);
+        window.App.toast('Investimento cadastrado!', 'success');
+      }
+      editingId = null;
       window.App.closeModal('addModal');
       load();
     } catch (err) {
       const detail = err.details?.[0]?.message;
       window.App.toast(detail || err.message, 'error');
     } finally {
-      btn.disabled = false; btn.textContent = 'Salvar';
+      btn.disabled = false;
+      btn.textContent = isEdit ? 'Salvar alteracoes' : 'Salvar';
     }
   });
 

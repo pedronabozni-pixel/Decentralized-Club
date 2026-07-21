@@ -39,6 +39,19 @@ export const cryptoBuysRepo = {
       .all(userId, symbol);
   },
 
+  update(userId, id, { symbol, name, quantity, pricePerUnit, dateBought }) {
+    const totalSpent = quantity * pricePerUnit;
+    const info = db
+      .prepare(`
+        UPDATE crypto_buys SET
+          crypto_symbol = ?, crypto_name = ?, quantity = ?,
+          price_per_unit = ?, total_spent = ?, date_bought = ?
+        WHERE id = ? AND user_id = ?
+      `)
+      .run(symbol, name || null, quantity, pricePerUnit, totalSpent, dateBought, id, userId);
+    return info.changes > 0 ? this.findById(userId, id) : null;
+  },
+
   remove(userId, id) {
     const info = db
       .prepare(`DELETE FROM crypto_buys WHERE id = ? AND user_id = ?`)

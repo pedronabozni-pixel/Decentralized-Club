@@ -9,6 +9,8 @@
   // Secao de criptomoedas opera em USD (moeda nativa do mercado cripto).
   const { fmtUSD, fmtPct, fmtNum, fmtDate, signClass } = window.App;
   let selectedSymbol = null;
+  let buysById = new Map(); // compras do historico atual (para edicao)
+  let editingBuyId = null;  // null = nova compra; id = edicao
 
   // Estado do tempo real (WebSocket Binance, precos ja em USDT ~ USD).
   const live = { bySymbol: new Map(), totalSpent: 0 };
@@ -169,6 +171,7 @@
 
   function renderHistory(buys) {
     const tbody = document.getElementById('historyBody');
+    buysById = new Map(buys.map((b) => [String(b.id), b]));
     if (!buys.length) {
       tbody.innerHTML = `<tr><td colspan="5" class="empty">Sem compras registradas.</td></tr>`;
       return;
@@ -179,9 +182,15 @@
         <td class="num">${fmtNum(b.quantity)}</td>
         <td class="num">${fmtUSD(b.price_per_unit)}</td>
         <td class="num">${fmtUSD(b.total_spent)}</td>
-        <td class="num"><button class="btn-icon-danger del-buy" data-id="${b.id}" title="Excluir">✕</button></td>
+        <td class="num" style="white-space:nowrap;">
+          <button class="btn btn-sm btn-ghost edit-buy" data-id="${b.id}" title="Editar">✎</button>
+          <button class="btn-icon-danger del-buy" data-id="${b.id}" title="Excluir">✕</button>
+        </td>
       </tr>`).join('');
 
+    tbody.querySelectorAll('.edit-buy').forEach((btn) => {
+      btn.addEventListener('click', () => openEditBuyModal(btn.dataset.id));
+    });
     tbody.querySelectorAll('.del-buy').forEach((btn) => {
       btn.addEventListener('click', async () => {
         if (!confirm('Excluir esta compra?')) return;
@@ -205,12 +214,44 @@
   const qtyInput = document.getElementById('buyQty');
   const priceInput = document.getElementById('buyPrice');
 
+  const toField = (v) => (v == null ? '' : String(v).replace('.', ','));
+
+  function setModalMode(mode, label) {
+    const title = document.querySelector('#addModal .modal-head h3');
+    const submit = document.querySelector('#addBuyForm button[type=submit]');
+    if (mode === 'edit') {
+      title.textContent = `Editar compra · ${label}`;
+      submit.textContent = 'Salvar alteracoes';
+    } else {
+      title.textContent = 'Adicionar compra';
+      submit.textContent = 'Salvar compra';
+    }
+  }
+
+  function openEditBuyModal(id) {
+    const b = buysById.get(String(id));
+    if (!b) return;
+    editingBuyId = b.id;
+    document.getElementById('coinSymbol').value = b.crypto_symbol;
+    document.getElementById('coinName').value = b.crypto_name || b.crypto_symbol;
+    searchInput.value = `${b.crypto_name || b.crypto_symbol} (${b.crypto_symbol})`;
+    document.getElementById('coinHint').textContent = `Selecionado: ${b.crypto_symbol}`;
+    document.getElementById('buyDate').value = b.date_bought.slice(0, 10);
+    qtyInput.value = toField(b.quantity);
+    priceInput.value = toField(b.price_per_unit);
+    updateTotal();
+    setModalMode('edit', b.crypto_symbol);
+    window.App.openModal(modal);
+  }
+
   document.getElementById('openAddBtn').addEventListener('click', () => {
+    editingBuyId = null;
     document.getElementById('addBuyForm').reset();
     document.getElementById('coinSymbol').value = '';
     document.getElementById('coinName').value = '';
     document.getElementById('buyDate').value = new Date().toISOString().slice(0, 10);
     updateTotal();
+    setModalMode('create');
     window.App.openModal(modal);
     setTimeout(() => searchInput.focus(), 100);
   });
@@ -307,22 +348,34 @@
       }
     } catch { /* mercado indisponivel: segue sem a checagem */ }
 
+    const isEdit = editingBuyId != null;
     try {
-      await window.API.addCryptoBuy({
+      const payload = {
         symbol, name: name || symbol,
         quantity,
         pricePerUnit,
         dateBought: document.getElementById('buyDate').value,
-      });
-      window.App.toast('Compra registrada!', 'success');
+      };
+      if (isEdit) {
+        await window.API.updateCryptoBuy(editingBuyId, payload);
+        window.App.toast('Compra atualizada!', 'success');
+      } else {
+        await window.API.addCryptoBuy(payload);
+        window.App.toast('Compra registrada!', 'success');
+      }
+      editingBuyId = null;
       window.App.closeModal(modal);
       selectedSymbol = symbol;
       await loadPositions();
+      // Atualiza o historico da moeda editada.
+      const { buys } = await window.API.cryptoBuysBySymbol(symbol);
+      renderHistory(buys);
     } catch (err) {
       const detail = err.details?.[0]?.message;
       window.App.toast(detail || err.message, 'error');
     } finally {
-      btn.disabled = false; btn.textContent = 'Salvar compra';
+      btn.disabled = false;
+      btn.textContent = isEdit ? 'Salvar alteracoes' : 'Salvar compra';
     }
   });
 

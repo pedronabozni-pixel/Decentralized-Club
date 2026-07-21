@@ -93,6 +93,22 @@ router.post('/', asyncHandler(async (req, res) => {
   res.status(201).json({ item });
 }));
 
+// PUT /api/fixed-income/:id -> edicao completa de um investimento
+router.put('/:id', asyncHandler(async (req, res) => {
+  const data = validate(investmentSchema, req.body);
+  const item = fixedIncomeRepo.update(req.user.id, Number(req.params.id), {
+    type: data.type,
+    description: data.description,
+    amount: data.amount,
+    rate: data.rate,
+    dateInvested: data.dateInvested,
+    maturityDate: data.maturityDate || null,
+    bank: data.bank,
+  });
+  if (!item) return res.status(404).json({ error: 'Investimento nao encontrado.' });
+  res.json({ item });
+}));
+
 // DELETE /api/fixed-income/:id
 router.delete('/:id', asyncHandler(async (req, res) => {
   const ok = fixedIncomeRepo.remove(req.user.id, Number(req.params.id));

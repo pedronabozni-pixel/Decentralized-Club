@@ -54,6 +54,20 @@ router.post('/buys', asyncHandler(async (req, res) => {
   res.status(201).json({ buy });
 }));
 
+// PUT /api/crypto/buys/:id -> edicao completa de uma compra (recalcula total)
+router.put('/buys/:id', asyncHandler(async (req, res) => {
+  const data = validate(buySchema, req.body);
+  const buy = cryptoBuysRepo.update(req.user.id, Number(req.params.id), {
+    symbol: data.symbol,
+    name: data.name,
+    quantity: data.quantity,
+    pricePerUnit: data.pricePerUnit,
+    dateBought: data.dateBought,
+  });
+  if (!buy) return res.status(404).json({ error: 'Compra nao encontrada.' });
+  res.json({ buy });
+}));
+
 // DELETE /api/crypto/buys/:id
 router.delete('/buys/:id', asyncHandler(async (req, res) => {
   const ok = cryptoBuysRepo.remove(req.user.id, Number(req.params.id));

@@ -27,6 +27,22 @@ export const fixedIncomeRepo = {
       .all(userId);
   },
 
+  update(userId, id, { type, description, amount, rate, dateInvested, maturityDate, bank }) {
+    const info = db
+      .prepare(`
+        UPDATE fixed_income SET
+          type = ?, description = ?, amount = ?, rate = ?,
+          date_invested = ?, maturity_date = ?, bank = ?
+        WHERE id = ? AND user_id = ?
+      `)
+      .run(
+        type, description || null, amount, rate,
+        dateInvested, maturityDate || null, bank || null,
+        id, userId
+      );
+    return info.changes > 0 ? this.findById(userId, id) : null;
+  },
+
   remove(userId, id) {
     const info = db
       .prepare(`DELETE FROM fixed_income WHERE id = ? AND user_id = ?`)
