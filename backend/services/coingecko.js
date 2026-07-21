@@ -120,23 +120,51 @@ export async function getGlobal() {
 }
 
 /**
- * Serie historica diaria de preco (em BRL) dos ultimos `days` dias.
- * Retorna [{ t: epochMs, price }]. Cacheada por 30 min.
+ * Serie base de 90 dias por moeda (1 ponto/dia, em BRL), cacheada 30 min.
+ * Buscar SEMPRE 90 dias e fatiar localmente evita estourar o rate limit da
+ * CoinGecko quando o usuario troca o periodo do grafico (7/30/90).
+ * Resposta vazia NAO e cacheada; 429 ganha um retry com pausa.
  */
-export async function getMarketChart(symbol, days = 30) {
-  const sym = symbol.toUpperCase();
-  return cache.getOrSet(`cg_chart_${sym}_${days}`, 1800, async () => {
-    const id = await resolveId(sym);
-    if (!id) return [];
+const CHART_BASE_DAYS = 90;
+
+async function baseChart(sym) {
+  const key = `cg_chart_base_${sym}`;
+  const cached = cache.get(key);
+  if (cached) return cached;
+
+  const id = await resolveId(sym);
+  if (!id) return [];
+
+  const url = `${BASE}/coins/${id}/market_chart?vs_currency=brl&days=${CHART_BASE_DAYS}`;
+  for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const url = `${BASE}/coins/${id}/market_chart?vs_currency=brl&days=${days}&interval=daily`;
       const data = await fetchJson(url);
-      return (data.prices || []).map(([t, price]) => ({ t, price }));
+      const raw = (data.prices || []).map(([t, price]) => ({ t, price }));
+      // Reamostra: mantem o ultimo ponto de cada dia.
+      const byDay = new Map();
+      for (const p of raw) byDay.set(new Date(p.t).toISOString().slice(0, 10), p);
+      const points = [...byDay.values()];
+      if (points.length) cache.set(key, points, 1800);
+      return points;
     } catch (err) {
-      console.warn(`[coingecko] market_chart ${sym} indisponivel:`, err.message);
+      const isRateLimit = String(err.message).includes('429');
+      console.warn(`[coingecko] market_chart ${sym} tentativa ${attempt}:`, err.message);
+      if (isRateLimit && attempt === 1) {
+        await new Promise((r) => setTimeout(r, 2500)); // espera a janela do limite
+        continue;
+      }
       return [];
     }
-  });
+  }
+  return [];
+}
+
+/** Serie diaria dos ultimos `days` dias, fatiada da base de 90. */
+export async function getMarketChart(symbol, days = 30) {
+  const points = await baseChart(symbol.toUpperCase());
+  if (!points.length) return [];
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  return points.filter((p) => p.t >= cutoff);
 }
 
 /** Sugestoes para autocomplete a partir de um termo de busca.
