@@ -31,28 +31,44 @@
   function renderKpis(d) {
     const dayCls = signClass(d.dayChange);
     const totCls = signClass(d.totalGainLoss);
+    const dayChip = d.dayChange >= 0 ? 'up' : 'down';
+    const totChip = d.totalGainLoss >= 0 ? 'up' : 'down';
     document.getElementById('kpis').innerHTML = `
-      <div class="card stat">
-        <span class="accent-line"></span>
+      <div class="kpi-hero">
         <div class="label">Patrimonio total</div>
-        <div class="stat-value serif" id="kpiTotalValue">${fmtBRL(d.totalValue)}</div>
-        <div class="delta text-muted">${d.crypto.positions.length} criptos · ${d.fixedIncome.count} renda fixa · ${d.assets?.count || 0} ativos</div>
+        <div class="hero-value" id="kpiTotalValue">${fmtBRL(d.totalValue)}</div>
+        <div class="hero-meta">
+          <span class="dot"></span>
+          ${d.crypto.positions.length} criptos · ${d.fixedIncome.count} renda fixa · ${d.assets?.count || 0} ativos
+          <span style="color:#3A3833;">·</span> atualizado ao vivo
+        </div>
       </div>
-      <div class="card stat">
-        <div class="label">Ganho/Perda do dia</div>
-        <div class="stat-value ${dayCls}">${fmtBRL(d.dayChange)}</div>
-        <div class="delta ${dayCls}">${fmtPct(d.dayChangePercent)}</div>
-      </div>
-      <div class="card stat">
-        <div class="label">Ganho/Perda total</div>
-        <div class="stat-value ${totCls}" id="kpiTotalGain">${fmtBRL(d.totalGainLoss)}</div>
-        <div class="delta ${totCls}" id="kpiTotalGainPct">${fmtPct(d.totalGainLossPercent)}</div>
-      </div>
-      <div class="card stat">
-        <div class="label">Total investido</div>
-        <div class="stat-value">${fmtBRL(d.totalInvested)}</div>
-        <div class="delta text-muted">Custo de aquisicao</div>
+      <div class="kpi-stack">
+        <div class="kpi-row">
+          <div class="label">Ganho/Perda do dia</div>
+          <div class="text-right">
+            <span class="val ${dayCls}">${fmtBRL(d.dayChange)}</span><span class="chip ${dayChip}">${fmtPct(d.dayChangePercent)}</span>
+          </div>
+        </div>
+        <div class="kpi-row">
+          <div class="label">Ganho/Perda total</div>
+          <div class="text-right">
+            <span class="val ${totCls}" id="kpiTotalGain">${fmtBRL(d.totalGainLoss)}</span><span class="chip ${totChip}" id="kpiTotalGainPct">${fmtPct(d.totalGainLossPercent)}</span>
+          </div>
+        </div>
+        <div class="kpi-row">
+          <div>
+            <div class="label">Total investido</div>
+            <div class="sub">Custo de aquisicao</div>
+          </div>
+          <span class="val">${fmtBRL(d.totalInvested)}</span>
+        </div>
       </div>`;
+    // Contagem animada no numero-heroi (so no load inicial).
+    if (!renderKpis.animated) {
+      renderKpis.animated = true;
+      window.App.countUp(document.getElementById('kpiTotalValue'), fmtBRL(d.totalValue));
+    }
   }
 
   function renderMarketMeta(market) {
@@ -66,9 +82,8 @@
   }
 
   function renderAllocation(a) {
-    // Novo formato: { total, groups: [{ key, label, value, percent }] }
-    const palette = window.Charts.PALETTE;
-    const items = (a.groups || []).map((g, i) => ({ ...g, color: palette[i % palette.length] }));
+    // { total, groups: [{ key, label, value, percent }] } com cor fixa por classe.
+    const items = (a.groups || []).map((g, i) => ({ ...g, color: window.Charts.classColor(g.key, i) }));
 
     if (!items.length) {
       document.getElementById('allocLegend').innerHTML =
@@ -116,7 +131,7 @@
   function renderCompare(cryptoValue, fixedValue, assetsValue) {
     window.Charts.bars('compareChart', ['Criptomoedas', 'Renda Fixa', 'Outros Ativos'],
       [cryptoValue, fixedValue, assetsValue],
-      [window.Charts.PALETTE[0], window.Charts.PALETTE[3], window.Charts.PALETTE[1]]);
+      [window.Charts.CLASS_COLORS.btc, window.Charts.CLASS_COLORS.renda_fixa, window.Charts.CLASS_COLORS.fisicos]);
   }
 
   // ---------- Tempo real (WebSocket Binance) ----------
@@ -164,8 +179,8 @@
     if (tv) tv.textContent = fmtBRL(totalValue);
     const g = document.getElementById('kpiTotalGain');
     const gp = document.getElementById('kpiTotalGainPct');
-    if (g) { g.textContent = fmtBRL(gain); g.className = `stat-value ${signClass(gain)}`; }
-    if (gp) { gp.textContent = fmtPct(gainPct); gp.className = `delta ${signClass(gain)}`; }
+    if (g) { g.textContent = fmtBRL(gain); g.className = `val ${signClass(gain)}`; }
+    if (gp) { gp.textContent = fmtPct(gainPct); gp.className = `chip ${gain >= 0 ? 'up' : 'down'}`; }
   }
 
   async function loadEvolution() {

@@ -36,9 +36,15 @@
   function renderGoals(items) {
     const wrap = document.getElementById('goalsList');
     if (!items.length) {
-      wrap.innerHTML = `<div class="card" style="grid-column:1/-1;"><div class="empty">
-        <div class="ico">◎</div>Nenhuma meta ainda. Defina onde voce quer chegar em
-        <strong>+ Nova meta</strong>.</div></div>`;
+      wrap.innerHTML = `<div class="card" style="grid-column:1/-1;">
+        <div class="empty-state">
+          <div class="ornament"><span class="diamond"></span></div>
+          <h3>Todo grande patrimonio comeca com um destino.</h3>
+          <p>Defina a sua primeira meta e calcularemos, com precisao, o aporte mensal que a torna inevitavel.</p>
+          <button class="btn btn-gold" id="emptyAddBtn">+ Nova meta</button>
+        </div></div>`;
+      document.getElementById('emptyAddBtn')?.addEventListener('click', () =>
+        document.getElementById('openAddBtn').click());
       return;
     }
 

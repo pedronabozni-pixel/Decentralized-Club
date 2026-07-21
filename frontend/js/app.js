@@ -64,23 +64,35 @@
       window.location.href = '/index.html';
     },
 
-    // ----- Sidebar (injeta nav + nome do usuario) -----
+    // ----- Sidebar agrupada (Visao geral / Investir / Planejar / Analisar) -----
     mountSidebar(active) {
       const user = window.API.Auth.user || {};
-      const links = [
-        { href: 'dashboard.html', ico: '◈', label: 'Dashboard' },
-        { href: 'criptomoedas.html', ico: '₿', label: 'Criptomoedas' },
-        { href: 'renda-fixa.html', ico: '▦', label: 'Renda Fixa' },
-        { href: 'ativos.html', ico: '◆', label: 'Ativos' },
-        { href: 'metas.html', ico: '◎', label: 'Metas' },
-        { href: 'valuation.html', ico: '⚖', label: 'Valuation' },
-        { href: 'cenarios.html', ico: '∆', label: 'Cenarios' },
-        { href: 'simulador.html', ico: '∿', label: 'Simulador' },
+      const groups = [
+        { label: 'Visao geral', items: [
+          { href: 'dashboard.html', ico: '◈', label: 'Dashboard' },
+        ] },
+        { label: 'Investir', items: [
+          { href: 'criptomoedas.html', ico: '₿', label: 'Criptomoedas' },
+          { href: 'renda-fixa.html', ico: '▤', label: 'Renda Fixa' },
+          { href: 'ativos.html', ico: '◆', label: 'Ativos' },
+        ] },
+        { label: 'Planejar', items: [
+          { href: 'metas.html', ico: '◎', label: 'Metas' },
+          { href: 'simulador.html', ico: '∿', label: 'Simulador' },
+        ] },
+        { label: 'Analisar', items: [
+          { href: 'valuation.html', ico: '◭', label: 'Valuation' },
+          { href: 'cenarios.html', ico: 'Δ', label: 'Cenarios' },
+        ] },
       ];
-      const nav = links.map((l) => `
-        <a class="nav-link ${l.href === active ? 'active' : ''}" href="${l.href}">
-          <span class="ico">${l.ico}</span><span class="label">${l.label}</span>
-        </a>`).join('');
+      const nav = groups.map((g) => `
+        <div class="nav-group">
+          <div class="nav-group-label">${g.label}</div>
+          ${g.items.map((l) => `
+            <a class="nav-link ${l.href === active ? 'active' : ''}" href="${l.href}">
+              <span class="ico">${l.ico}</span><span class="label">${l.label}</span>
+            </a>`).join('')}
+        </div>`).join('');
 
       const el = document.getElementById('sidebar');
       if (!el) return;
@@ -89,15 +101,47 @@
           <div class="mark">Decentralized<span>.</span></div>
           <div class="sub">Club · Wealth</div>
         </div>
-        ${nav}
+        <div class="brand-rule"></div>
+        <div class="nav-scroll">${nav}</div>
         <div class="sidebar-footer">
           <div class="user-chip">
             <strong>${user.name || 'Investidor'}</strong>
             ${user.email || ''}
           </div>
-          <button class="btn btn-ghost btn-sm w-full" id="logoutBtn">Sair</button>
+          <button id="logoutBtn">Sair</button>
         </div>`;
       document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+    },
+
+    /**
+     * Contagem animada em numeros-heroi (0 -> valor em ~1.3s, ease-out cubico).
+     * Respeita prefers-reduced-motion. Usar so no load inicial; updates ao
+     * vivo escrevem direto no elemento.
+     */
+    countUp(el, finalText) {
+      if (!el) return;
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const match = String(finalText).match(/-?[\d.,]+/);
+      if (reduced || !match) { el.textContent = finalText; return; }
+      const numStr = match[0];
+      const target = Number(numStr.replace(/\./g, '').replace(',', '.'));
+      if (!Number.isFinite(target)) { el.textContent = finalText; return; }
+      const decimals = (numStr.split(',')[1] || '').length;
+      const prefix = String(finalText).slice(0, match.index);
+      const suffix = String(finalText).slice(match.index + numStr.length);
+      const start = performance.now();
+      const dur = 1300;
+      const step = (now) => {
+        const p = Math.min(1, (now - start) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = (target * eased).toLocaleString('pt-BR', {
+          minimumFractionDigits: decimals, maximumFractionDigits: decimals,
+        });
+        el.textContent = prefix + val + suffix;
+        if (p < 1) requestAnimationFrame(step);
+        else el.textContent = finalText;
+      };
+      requestAnimationFrame(step);
     },
 
     // ----- Toast -----
