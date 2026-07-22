@@ -98,13 +98,19 @@
   };
 
   const Charts = {
-    // Linha: evolucao do patrimonio (+ CDI tracejado opcional).
-    line(canvasId, labels, values, { compare = null } = {}) {
+    // Linha: evolucao do patrimonio (+ serie tracejada opcional).
+    // fmt: 'brl' (padrao) | 'pts' (indices) | 'usd'.
+    line(canvasId, labels, values, { compare = null, fmt = 'brl', label = 'Patrimonio' } = {}) {
       applyDefaults();
       destroy(canvasId);
       const el = document.getElementById(canvasId);
       if (!el) return;
-      const datasets = [{ ...goldLine, label: compare ? 'Patrimonio' : '', data: values }];
+      const pts = (v) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(v || 0);
+      const fmtFn = fmt === 'pts' ? pts : (fmt === 'usd' ? usd : brl);
+      const tickFn = fmt === 'brl'
+        ? (v) => 'R$ ' + (v / 1000) + 'k'
+        : (v) => (v >= 1000 ? pts(v / 1000) + 'k' : pts(v));
+      const datasets = [{ ...goldLine, label: compare ? label : '', data: values }];
       if (compare && compare.data?.length) {
         datasets.push({ ...dashedLine, label: compare.label || 'CDI', data: compare.data });
       }
@@ -116,13 +122,13 @@
           interaction: { intersect: false, mode: 'index' },
           plugins: {
             legend: { display: !!compare, position: 'top' },
-            tooltip: tooltip(brl, !!compare),
+            tooltip: tooltip(fmtFn, !!compare),
           },
           scales: {
             x: { grid: { display: false }, ticks: { color: TEXT5, maxTicksLimit: 6 } },
             y: {
               grid: { color: GRID }, border: { display: false },
-              ticks: { color: TEXT5, callback: (v) => 'R$ ' + (v / 1000) + 'k' },
+              ticks: { color: TEXT5, callback: tickFn },
             },
           },
         },

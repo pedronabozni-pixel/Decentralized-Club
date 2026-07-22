@@ -88,6 +88,8 @@
     simulate: (p) => request('POST', '/fixed-income/simulate', p),
     selic: () => request('GET', '/fixed-income/selic'),
     priceHistory: (s, days) => request('GET', `/market/history/${encodeURIComponent(s)}?days=${days}`),
+    marketOverview: () => request('GET', '/market/overview'),
+    indexHistory: (key, range) => request('GET', `/market/index-history/${encodeURIComponent(key)}?range=${range || '6m'}`),
     assets: () => request('GET', '/assets'),
     assetCategories: () => request('GET', '/assets/categories'),
     addAsset: (a) => request('POST', '/assets', a),

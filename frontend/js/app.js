@@ -70,6 +70,7 @@
       const groups = [
         { label: 'Visao geral', items: [
           { href: 'dashboard.html', ico: '◈', label: 'Dashboard' },
+          { href: 'mercados.html', ico: '◉', label: 'Mercados' },
         ] },
         { label: 'Investir', items: [
           { href: 'criptomoedas.html', ico: '₿', label: 'Criptomoedas' },
