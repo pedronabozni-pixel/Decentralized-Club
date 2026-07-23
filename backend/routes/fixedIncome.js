@@ -26,6 +26,7 @@ const simulateSchema = z.object({
   amount: z.coerce.number().positive(),
   rate: z.coerce.number().min(0).max(100),
   periodDays: z.coerce.number().int().positive(),
+  monthlyContribution: z.coerce.number().min(0).optional(),
   type: z.string().trim().max(40).optional(),
 });
 
@@ -116,11 +117,46 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   res.json({ ok: true });
 }));
 
-// POST /api/fixed-income/simulate  -> simulador de juros (bruto, IR, liquido)
+// POST /api/fixed-income/simulate  -> simulador de juros (bruto, IR, liquido),
+// com aportes mensais opcionais (anuidade com capitalizacao mensal).
 router.post('/simulate', asyncHandler(async (req, res) => {
   const data = validate(simulateSchema, req.body);
-  const result = compoundReturn(data.amount, data.rate, data.periodDays, data.type || '');
-  res.json({ result });
+  const base = compoundReturn(data.amount, data.rate, data.periodDays, data.type || '');
+
+  const aporte = data.monthlyContribution || 0;
+  if (aporte <= 0) {
+    return res.json({ result: { ...base, monthlyContribution: 0, totalContributed: 0, months: 0 } });
+  }
+
+  // Valor futuro dos aportes: A x [((1+i)^n - 1) / i], i = taxa mensal.
+  const months = Math.max(0, Math.floor(data.periodDays / 30.44));
+  const i = Math.pow(1 + data.rate / 100, 1 / 12) - 1;
+  const fvContrib = i > 0
+    ? aporte * ((Math.pow(1 + i, months) - 1) / i)
+    : aporte * months;
+  const totalContributed = aporte * months;
+  const contribYield = fvContrib - totalContributed;
+
+  const invested = data.amount + totalContributed;
+  const grossYield = base.grossYield + contribYield;
+  const irAmount = grossYield * base.irRate;
+  const netYield = grossYield - irAmount;
+
+  res.json({
+    result: {
+      principal: data.amount,
+      monthlyContribution: aporte,
+      totalContributed,
+      months,
+      invested,
+      days: data.periodDays,
+      grossYield,
+      irRate: base.irRate,
+      irAmount,
+      netYield,
+      total: invested + netYield,
+    },
+  });
 }));
 
 export default router;

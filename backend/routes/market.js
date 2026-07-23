@@ -12,7 +12,7 @@ import { getUnifiedPrices } from '../services/prices.js';
 import { priceHistoryRepo } from '../repositories/priceHistory.js';
 import { getSelic } from '../services/bcb.js';
 import {
-  getIndices, getIndexHistory, getB3Highlights,
+  getIndices, getIndexHistory, getB3Highlights, getFx,
   getTopCryptos, getTrending, getFearGreed, getIpca12m, getEurBrl,
 } from '../services/marketInfo.js';
 
@@ -65,9 +65,10 @@ router.get('/history/:symbol', asyncHandler(async (req, res) => {
 
 // GET /api/market/overview -> central de informacoes (pagina Mercados)
 router.get('/overview', asyncHandler(async (req, res) => {
-  const [indices, b3, cryptos, trending, fearGreed, ipca, selic, usd, eurBrl, global] =
+  const [indices, fx, b3, cryptos, trending, fearGreed, ipca, selic, usd, eurBrl, global] =
     await Promise.all([
       getIndices(),
+      getFx(),
       getB3Highlights(),
       getTopCryptos(),
       getTrending(),
@@ -78,12 +79,23 @@ router.get('/overview', asyncHandler(async (req, res) => {
       getEurBrl(),
       getGlobal(),
     ]);
+
+  // Destaques do dia: maiores altas e baixas entre B3 e top criptos.
+  const pool = [
+    ...b3.map((s) => ({ type: 'B3', symbol: s.ticker, name: s.name, changePct: s.changePct })),
+    ...cryptos.map((c) => ({ type: 'Cripto', symbol: c.symbol, name: c.name, changePct: c.change24h })),
+  ].filter((x) => Number.isFinite(x.changePct));
+  const sorted = [...pool].sort((a, b) => b.changePct - a.changePct);
+  const movers = { gainers: sorted.slice(0, 4), losers: sorted.slice(-4).reverse() };
+
   res.json({
     indices,
+    fx,
     b3,
     cryptos,
     trending,
     fearGreed,
+    movers,
     macro: {
       selic: selic.selic,
       ipca12m: ipca?.value ?? null,

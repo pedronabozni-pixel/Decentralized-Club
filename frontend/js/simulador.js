@@ -33,12 +33,18 @@
     const period = Number(document.getElementById('simPeriod').value);
     if (!(amount > 0)) { window.App.toast('Valor inicial invalido.', 'error'); return; }
     if (!(rate >= 0)) { window.App.toast('Taxa invalida.', 'error'); return; }
+    const monthlyRaw = document.getElementById('simMonthly').value.trim();
+    const monthlyContribution = monthlyRaw
+      ? window.App.parseDecimal(monthlyRaw, { money: true }) : 0;
+    if (monthlyRaw && !(monthlyContribution >= 0)) {
+      window.App.toast('Aporte mensal invalido.', 'error'); return;
+    }
     const unit = Number(document.getElementById('simUnit').value);
     const type = document.getElementById('simType').value;
     const periodDays = Math.round(period * unit);
 
     try {
-      const { result } = await window.API.simulate({ amount, rate, periodDays, type });
+      const { result } = await window.API.simulate({ amount, rate, periodDays, monthlyContribution, type });
       render(result);
     } catch (err) {
       window.App.toast(err.message || 'Falha na simulacao.', 'error');
@@ -48,7 +54,13 @@
   function render(r) {
     const years = (r.days / 365);
     const periodLabel = years >= 1 ? `${years.toFixed(1)} anos` : `${r.days} dias`;
-    const yieldPct = r.principal > 0 ? (r.netYield / r.principal) * 100 : 0;
+    const investedBase = r.invested ?? r.principal;
+    const yieldPct = investedBase > 0 ? (r.netYield / investedBase) * 100 : 0;
+    const hasAporte = (r.monthlyContribution || 0) > 0;
+
+    const aporteRows = hasAporte ? `
+          <tr><td class="text-muted">Aporte mensal</td><td class="num">${fmtBRL(r.monthlyContribution)} × ${r.months} meses</td></tr>
+          <tr><td class="text-muted">Total aportado</td><td class="num">${fmtBRL(r.totalContributed)}</td></tr>` : '';
 
     document.getElementById('simResult').innerHTML = `
       <div class="card stat" style="background:var(--color-bg);margin-bottom:18px;">
@@ -60,7 +72,9 @@
 
       <table>
         <tbody>
-          <tr><td class="text-muted">Valor investido</td><td class="num">${fmtBRL(r.principal)}</td></tr>
+          <tr><td class="text-muted">Valor inicial</td><td class="num">${fmtBRL(r.principal)}</td></tr>
+          ${aporteRows}
+          ${hasAporte ? `<tr><td class="text-muted">Investido no total</td><td class="num">${fmtBRL(investedBase)}</td></tr>` : ''}
           <tr><td class="text-muted">Rendimento bruto</td><td class="num positive">${fmtBRL(r.grossYield)}</td></tr>
           <tr><td class="text-muted">Imposto de renda (${(r.irRate * 100).toFixed(1)}%)</td><td class="num negative">- ${fmtBRL(r.irAmount)}</td></tr>
           <tr><td class="text-muted">Rendimento liquido</td><td class="num positive">${fmtBRL(r.netYield)}</td></tr>

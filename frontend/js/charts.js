@@ -106,10 +106,11 @@
       const el = document.getElementById(canvasId);
       if (!el) return;
       const pts = (v) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(v || 0);
+      const dec2 = (v) => new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v || 0);
       const fmtFn = fmt === 'pts' ? pts : (fmt === 'usd' ? usd : brl);
       const tickFn = fmt === 'brl'
-        ? (v) => 'R$ ' + (v / 1000) + 'k'
-        : (v) => (v >= 1000 ? pts(v / 1000) + 'k' : pts(v));
+        ? (v) => (Math.abs(v) >= 10000 ? 'R$ ' + pts(v / 1000) + 'k' : 'R$ ' + (Math.abs(v) < 100 ? dec2(v) : pts(v)))
+        : (v) => (v >= 10000 ? pts(v / 1000) + 'k' : (v < 100 ? dec2(v) : pts(v)));
       const datasets = [{ ...goldLine, label: compare ? label : '', data: values }];
       if (compare && compare.data?.length) {
         datasets.push({ ...dashedLine, label: compare.label || 'CDI', data: compare.data });

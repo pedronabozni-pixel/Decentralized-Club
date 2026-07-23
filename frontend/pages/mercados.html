@@ -24,18 +24,97 @@
         <div class="meta" id="macroTicker">Carregando…</div>
       </div>
 
-      <!-- Indices e commodities -->
-      <div class="grid cols-4" id="indicesRow" style="grid-template-columns:repeat(5,1fr);">
-        <div class="card stat"><div class="label">Ibovespa</div><div class="stat-value skeleton">00000</div></div>
-        <div class="card stat"><div class="label">S&amp;P 500</div><div class="stat-value skeleton">00000</div></div>
-        <div class="card stat"><div class="label">Nasdaq</div><div class="stat-value skeleton">00000</div></div>
-        <div class="card stat"><div class="label">Ouro</div><div class="stat-value skeleton">00000</div></div>
-        <div class="card stat"><div class="label">Petroleo</div><div class="stat-value skeleton">00000</div></div>
+      <!-- Navegacao da pagina -->
+      <div class="range-tabs" id="marketTabs" style="margin-bottom:26px;">
+        <div class="range-tab active" data-tab="visao">Visao geral</div>
+        <div class="range-tab" data-tab="cripto">Cripto</div>
+        <div class="range-tab" data-tab="bolsa">Bolsa &amp; Indices</div>
+        <div class="range-tab" data-tab="cambio">Cambio &amp; Juros</div>
       </div>
 
-      <!-- Grafico principal + sentimento -->
-      <div class="grid split-wide mt-lg">
-        <div class="card chart-card pad-lg">
+      <!-- ============ ABA: VISAO GERAL ============ -->
+      <section id="tab-visao">
+        <div class="grid cols-3" id="pulseRow">
+          <div class="card stat"><div class="label">Carregando</div><div class="stat-value skeleton">00000</div></div>
+          <div class="card stat"><div class="label">…</div><div class="stat-value skeleton">00000</div></div>
+          <div class="card stat"><div class="label">…</div><div class="stat-value skeleton">00000</div></div>
+        </div>
+
+        <div class="grid split-wide mt-lg" style="align-items:start;">
+          <div class="card pad-lg">
+            <div class="section-title" style="margin:0 0 16px;">
+              <h2 style="font-size:20px;">Destaques do dia</h2>
+              <span class="hint">entre as acoes e criptos monitoradas</span>
+            </div>
+            <div class="grid cols-2" id="moversGrid" style="gap:20px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="card pad-lg">
+              <div class="stat"><div class="label">Fear &amp; Greed · Cripto</div></div>
+              <div id="fngBody" class="skeleton" style="height:90px;"></div>
+            </div>
+            <div class="card pad-lg">
+              <div class="stat"><div class="label">Macro Brasil</div></div>
+              <div id="macroBody" class="skeleton" style="height:100px;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ABA: CRIPTO ============ -->
+      <section id="tab-cripto" class="hidden">
+        <div class="grid cols-3" id="cryptoStats"></div>
+
+        <div class="card chart-card pad-lg mt-lg">
+          <div class="chart-head" style="flex-wrap:wrap;gap:12px;">
+            <h3 id="cryptoChartTitle">Bitcoin</h3>
+            <div class="flex gap-sm" style="flex-wrap:wrap;">
+              <div class="range-tabs" id="cryptoIdxTabs">
+                <div class="range-tab active" data-idx="btc">BTC</div>
+                <div class="range-tab" data-idx="eth">ETH</div>
+                <div class="range-tab" data-idx="sol">SOL</div>
+                <div class="range-tab" data-idx="xrp">XRP</div>
+              </div>
+              <div class="range-tabs" id="cryptoRangeTabs">
+                <div class="range-tab" data-range="1m">1M</div>
+                <div class="range-tab active" data-range="6m">6M</div>
+                <div class="range-tab" data-range="1a">1A</div>
+              </div>
+            </div>
+          </div>
+          <div class="chart-box h-tall"><canvas id="cryptoChart"></canvas></div>
+        </div>
+
+        <div class="section-title"><h2>Top 20 por valor de mercado</h2><span class="hint" id="globalHint"></span></div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:36px;">#</th><th>Ativo</th>
+                  <th class="num">Preco</th><th class="num">24h</th><th class="num">7 dias</th>
+                  <th class="num">Market cap</th><th class="num">Ultimos 7 dias</th>
+                </tr>
+              </thead>
+              <tbody id="cryptoTable"><tr><td colspan="7" class="empty">Carregando…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card pad-lg mt-lg">
+          <div class="section-title" style="margin:0 0 14px;">
+            <h2 style="font-size:20px;">Em alta nas buscas</h2>
+            <span class="hint">CoinGecko trending</span>
+          </div>
+          <div id="trendingList" class="flex gap-sm" style="flex-wrap:wrap;"></div>
+        </div>
+      </section>
+
+      <!-- ============ ABA: BOLSA & INDICES ============ -->
+      <section id="tab-bolsa" class="hidden">
+        <div class="grid cols-4" id="indicesRow" style="grid-template-columns:repeat(4,1fr);"></div>
+
+        <div class="card chart-card pad-lg mt-lg">
           <div class="chart-head" style="flex-wrap:wrap;gap:12px;">
             <h3 id="idxTitle">Ibovespa</h3>
             <div class="flex gap-sm" style="flex-wrap:wrap;">
@@ -43,10 +122,12 @@
                 <div class="range-tab active" data-idx="ibov">Ibovespa</div>
                 <div class="range-tab" data-idx="sp500">S&amp;P 500</div>
                 <div class="range-tab" data-idx="nasdaq">Nasdaq</div>
+                <div class="range-tab" data-idx="dow">Dow</div>
+                <div class="range-tab" data-idx="vix">VIX</div>
                 <div class="range-tab" data-idx="ouro">Ouro</div>
                 <div class="range-tab" data-idx="petroleo">Brent</div>
               </div>
-              <div class="range-tabs" id="rangeTabs">
+              <div class="range-tabs" id="idxRangeTabs">
                 <div class="range-tab" data-range="1m">1M</div>
                 <div class="range-tab active" data-range="6m">6M</div>
                 <div class="range-tab" data-range="1a">1A</div>
@@ -56,60 +137,53 @@
           <div class="chart-box h-tall"><canvas id="indexChart"></canvas></div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          <!-- Fear & Greed -->
-          <div class="card pad-lg" id="fngCard">
-            <div class="stat"><div class="label">Fear &amp; Greed · Cripto</div></div>
-            <div id="fngBody" class="skeleton" style="height:90px;"></div>
-          </div>
-          <!-- Macro Brasil -->
-          <div class="card pad-lg" style="flex:1;">
-            <div class="stat"><div class="label">Macro Brasil</div></div>
-            <div id="macroBody" class="skeleton" style="height:110px;"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Top criptos -->
-      <div class="section-title"><h2>Top 10 criptomoedas</h2><span class="hint" id="globalHint"></span></div>
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:36px;">#</th><th>Ativo</th>
-                <th class="num">Preco</th><th class="num">24h</th><th class="num">7 dias</th>
-                <th class="num">Market cap</th><th class="num">Ultimos 7 dias</th>
-              </tr>
-            </thead>
-            <tbody id="cryptoTable"><tr><td colspan="7" class="empty">Carregando…</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- B3 em destaque + trending -->
-      <div class="grid split-mid mt-lg" style="align-items:start;">
-        <div class="card pad-lg">
-          <div class="section-title" style="margin:0 0 14px;"><h2 style="font-size:20px;">Bolsa Brasil em destaque</h2></div>
+        <div class="section-title"><h2>Acoes monitoradas · B3</h2><span class="hint">ordenadas pela variacao do dia</span></div>
+        <div class="card">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Acao</th><th class="num">Preco</th><th class="num">Dia</th></tr></thead>
+              <thead><tr><th>Acao</th><th class="num">Preco</th><th class="num">Variacao do dia</th></tr></thead>
               <tbody id="b3Table"><tr><td colspan="3" class="empty">Carregando…</td></tr></tbody>
             </table>
           </div>
         </div>
-        <div class="card pad-lg">
-          <div class="section-title" style="margin:0 0 14px;"><h2 style="font-size:20px;">Em alta no momento</h2>
-            <span class="hint">buscas na CoinGecko</span></div>
-          <div id="trendingList"></div>
-          <div class="house-note" style="margin-top:18px;">O mercado fala, o clube escuta.</div>
+      </section>
+
+      <!-- ============ ABA: CAMBIO & JUROS ============ -->
+      <section id="tab-cambio" class="hidden">
+        <div class="grid cols-3" id="fxRow"></div>
+
+        <div class="grid split-wide mt-lg" style="align-items:start;">
+          <div class="card chart-card pad-lg">
+            <div class="chart-head" style="flex-wrap:wrap;gap:12px;">
+              <h3 id="fxTitle">Dolar</h3>
+              <div class="flex gap-sm" style="flex-wrap:wrap;">
+                <div class="range-tabs" id="fxTabs">
+                  <div class="range-tab active" data-idx="dolar">Dolar</div>
+                  <div class="range-tab" data-idx="euro">Euro</div>
+                  <div class="range-tab" data-idx="libra">Libra</div>
+                </div>
+                <div class="range-tabs" id="fxRangeTabs">
+                  <div class="range-tab" data-range="1m">1M</div>
+                  <div class="range-tab active" data-range="6m">6M</div>
+                  <div class="range-tab" data-range="1a">1A</div>
+                </div>
+              </div>
+            </div>
+            <div class="chart-box h-tall"><canvas id="fxChart"></canvas></div>
+          </div>
+
+          <div class="card pad-lg">
+            <div class="stat"><div class="label">Juros &amp; Inflacao</div></div>
+            <div id="ratesBody" class="skeleton" style="height:160px;"></div>
+            <div class="house-note" style="margin-top:18px;">O tempo recompensa quem entende os juros.</div>
+          </div>
         </div>
-      </div>
+      </section>
 
       <div class="card pad-lg mt-lg">
         <p class="text-muted" style="font-size:.84rem;">
-          Dados de mercado via Yahoo Finance, CoinGecko, alternative.me e Banco
-          Central do Brasil, com atualizacao automatica e cache curto. Conteudo
+          Dados via Yahoo Finance, CoinGecko, Binance, alternative.me e Banco
+          Central do Brasil, com cache curto e atualizacao automatica. Conteudo
           informativo, nao constitui recomendacao de investimento.
         </p>
       </div>

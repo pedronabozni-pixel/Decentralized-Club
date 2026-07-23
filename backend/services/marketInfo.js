@@ -38,34 +38,82 @@ async function yahooTicker(symbol) {
   });
 }
 
-// ---- Indices e commodities ------------------------------------------------
+// ---- Indices, commodities e cambio ----------------------------------------
 const INDICES = [
   { key: 'ibov', symbol: '^BVSP', label: 'Ibovespa', kind: 'pts' },
   { key: 'sp500', symbol: '^GSPC', label: 'S&P 500', kind: 'pts' },
   { key: 'nasdaq', symbol: '^IXIC', label: 'Nasdaq', kind: 'pts' },
+  { key: 'dow', symbol: '^DJI', label: 'Dow Jones', kind: 'pts' },
+  { key: 'vix', symbol: '^VIX', label: 'VIX (medo da bolsa)', kind: 'pts' },
   { key: 'ouro', symbol: 'GC=F', label: 'Ouro (oz)', kind: 'usd' },
   { key: 'petroleo', symbol: 'BZ=F', label: 'Petroleo Brent', kind: 'usd' },
+];
+
+const FX = [
+  { key: 'dolar', symbol: 'BRL=X', label: 'Dolar' },
+  { key: 'euro', symbol: 'EURBRL=X', label: 'Euro' },
+  { key: 'libra', symbol: 'GBPBRL=X', label: 'Libra' },
 ];
 
 export async function getIndices() {
   const rows = await Promise.all(INDICES.map(async (i) => {
     const q = await yahooTicker(i.symbol);
-    return q ? { ...i, price: q.price, changePct: q.changePct } : null;
+    return q ? { key: i.key, label: i.label, kind: i.kind, price: q.price, changePct: q.changePct } : null;
   }));
   return rows.filter(Boolean);
 }
 
-// ---- Historico de um indice (grafico principal) ---------------------------
+export async function getFx() {
+  const rows = await Promise.all(FX.map(async (i) => {
+    const q = await yahooTicker(i.symbol);
+    return q ? { key: i.key, label: i.label, price: q.price, changePct: q.changePct } : null;
+  }));
+  return rows.filter(Boolean);
+}
+
+// ---- Historico (indices, cambio via Yahoo; cripto via Binance) ------------
 const RANGE_MAP = { '1m': '1mo', '6m': '6mo', '1a': '1y' };
+const RANGE_DAYS = { '1m': 30, '6m': 180, '1a': 365 };
+
+const CRYPTO_HIST = [
+  { key: 'btc', pair: 'BTCUSDT', label: 'Bitcoin' },
+  { key: 'eth', pair: 'ETHUSDT', label: 'Ethereum' },
+  { key: 'sol', pair: 'SOLUSDT', label: 'Solana' },
+  { key: 'xrp', pair: 'XRPUSDT', label: 'XRP' },
+];
 
 export async function getIndexHistory(key, range = '6m') {
-  const idx = INDICES.find((i) => i.key === key);
-  if (!idx) return null;
+  // Cripto: klines diarios da Binance convertidos para BRL.
+  const crypto = CRYPTO_HIST.find((c) => c.key === key);
+  if (crypto) {
+    const days = RANGE_DAYS[range] || 180;
+    return cache.getOrSet(`mi_hist_${key}_${days}`, 900, async () => {
+      try {
+        const [k, usd] = await Promise.all([
+          fetchJson(`https://api.binance.com/api/v3/klines?symbol=${crypto.pair}&interval=1d&limit=${days}`),
+          getUsdBrl(),
+        ]);
+        const points = k.map((row) => ({
+          date: new Date(row[0]).toISOString().slice(0, 10),
+          value: Number(row[4]) * usd.rate,
+        }));
+        return { key, label: crypto.label, kind: 'brl', points };
+      } catch (err) {
+        console.warn(`[marketInfo] hist ${key}:`, err.message);
+        return { key, label: crypto.label, kind: 'brl', points: [] };
+      }
+    });
+  }
+
+  // Indices e cambio: Yahoo.
+  const src = INDICES.find((i) => i.key === key)
+    || FX.map((f) => ({ ...f, kind: 'brl' })).find((f) => f.key === key);
+  if (!src) return null;
   const yr = RANGE_MAP[range] || '6mo';
   return cache.getOrSet(`mi_hist_${key}_${yr}`, 900, async () => {
     try {
       const data = await fetchJson(
-        `${YAHOO}/${encodeURIComponent(idx.symbol)}?interval=1d&range=${yr}`, UA
+        `${YAHOO}/${encodeURIComponent(src.symbol)}?interval=1d&range=${yr}`, UA
       );
       const r = data.chart?.result?.[0];
       const closes = r?.indicators?.quote?.[0]?.close || [];
@@ -73,26 +121,36 @@ export async function getIndexHistory(key, range = '6m') {
       const points = stamps
         .map((t, i) => ({ date: new Date(t * 1000).toISOString().slice(0, 10), value: closes[i] }))
         .filter((p) => p.value != null);
-      return { key, label: idx.label, kind: idx.kind, points };
+      return { key, label: src.label, kind: src.kind, points };
     } catch (err) {
       console.warn(`[marketInfo] hist ${key}:`, err.message);
-      return { key, label: idx.label, kind: idx.kind, points: [] };
+      return { key, label: src.label, kind: src.kind, points: [] };
     }
   });
 }
 
-// ---- Acoes B3 em destaque -------------------------------------------------
-const B3_BLUECHIPS = [
+// ---- Acoes B3 monitoradas -------------------------------------------------
+const B3_STOCKS = [
   { ticker: 'PETR4', name: 'Petrobras' },
   { ticker: 'VALE3', name: 'Vale' },
   { ticker: 'ITUB4', name: 'Itau' },
   { ticker: 'BBDC4', name: 'Bradesco' },
+  { ticker: 'BBAS3', name: 'Banco do Brasil' },
   { ticker: 'WEGE3', name: 'WEG' },
   { ticker: 'B3SA3', name: 'B3' },
+  { ticker: 'ABEV3', name: 'Ambev' },
+  { ticker: 'MGLU3', name: 'Magazine Luiza' },
+  { ticker: 'RENT3', name: 'Localiza' },
+  { ticker: 'PRIO3', name: 'PRIO' },
+  { ticker: 'ELET3', name: 'Eletrobras' },
+  { ticker: 'SUZB3', name: 'Suzano' },
+  { ticker: 'GGBR4', name: 'Gerdau' },
+  { ticker: 'RADL3', name: 'Raia Drogasil' },
+  { ticker: 'RAIL3', name: 'Rumo' },
 ];
 
 export async function getB3Highlights() {
-  const rows = await Promise.all(B3_BLUECHIPS.map(async (s) => {
+  const rows = await Promise.all(B3_STOCKS.map(async (s) => {
     const q = await yahooTicker(`${s.ticker}.SA`);
     return q ? { ...s, price: q.price, changePct: q.changePct } : null;
   }));
@@ -161,7 +219,7 @@ async function topCryptosViaBinance() {
 
 export async function getTopCryptos() {
   const url = 'https://api.coingecko.com/api/v3/coins/markets'
-    + '?vs_currency=brl&order=market_cap_desc&per_page=10&page=1'
+    + '?vs_currency=brl&order=market_cap_desc&per_page=20&page=1'
     + '&sparkline=true&price_change_percentage=24h,7d';
   const viaCoingecko = await coingeckoResilient('mi_top_cryptos', 180, url, (data) => data.map((c) => ({
     rank: c.market_cap_rank,
