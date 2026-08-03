@@ -5,31 +5,31 @@
 // ==========================================================================
 (function () {
   const GOLD = '#C9A961';
-  const GOLD_BRIGHT = '#E4CD96';
-  const TEXT2 = '#A29F94';
-  const TEXT4 = '#6B6960';
-  const TEXT5 = '#57554E';
-  const GRID = 'rgba(245,245,240,0.05)';
+  const GOLD_BRIGHT = '#C9A961';
+  const TEXT2 = '#97928A';
+  const TEXT4 = '#6E6A62';
+  const TEXT5 = '#4E4B45';
+  const GRID = 'rgba(245,245,240,0.045)';
 
   // Cores por classe de ativo (donut, barras, legendas).
   const CLASS_COLORS = {
     btc: '#C9A961',
-    altcoins: '#98A6BE',
-    renda_fixa: '#8B857A',
-    bolsa_br: '#B08D57',
-    internacional: '#7E9CD8',
-    moedas: '#C4B590',
-    fundos: '#9A8FB8',
-    fisicos: '#6FA98C',
+    altcoins: '#F5F5F0',
+    renda_fixa: '#97928A',
+    bolsa_br: '#8F7439',
+    internacional: '#D6C9A8',
+    moedas: '#6E6A62',
+    fundos: '#B5B1A8',
+    fisicos: '#8F7439',
   };
-  const PALETTE = ['#C9A961', '#98A6BE', '#8B857A', '#6FA98C', '#7E9CD8', '#C4B590', '#9A8FB8', '#B08D57'];
+  const PALETTE = ['#C9A961', '#F5F5F0', '#97928A', '#8F7439', '#D6C9A8', '#6E6A62', '#B5B1A8', '#4E4B45'];
 
   const brl = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
   const usd = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD' }).format(v || 0);
 
   function applyDefaults() {
     if (!window.Chart) return;
-    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.family = "'IBM Plex Mono', monospace";
     Chart.defaults.font.size = 10.5;
     Chart.defaults.color = TEXT5;
     Chart.defaults.borderColor = GRID;
@@ -46,11 +46,11 @@
       borderColor: 'rgba(201,169,97,0.35)',
       borderWidth: 1,
       titleColor: '#F0EAD9',
-      titleFont: { family: "'Inter', sans-serif", size: 11, weight: '600' },
+      titleFont: { family: "'IBM Plex Mono', monospace", size: 10, weight: '600' },
       bodyColor: TEXT2,
       bodyFont: { family: "'Inter', sans-serif", size: 11.5 },
       padding: 12,
-      cornerRadius: 8,
+      cornerRadius: 0,
       displayColors: !!withColors,
       boxWidth: 8, boxHeight: 8, boxPadding: 6,
       usePointStyle: true,
@@ -189,7 +189,7 @@
           }],
         },
         options: {
-          responsive: true, maintainAspectRatio: false, cutout: '72%',
+          responsive: true, maintainAspectRatio: false, cutout: '76%',
           plugins: {
             legend: { display: false },
             tooltip: tooltip(brl, true),
@@ -211,7 +211,7 @@
           datasets: [{
             data: values,
             backgroundColor: colors || PALETTE,
-            borderRadius: 3,
+            borderRadius: 0,
             maxBarThickness: 52,
           }],
         },

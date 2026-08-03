@@ -1,17 +1,17 @@
 /* ==========================================================================
-   Graficos (Chart.js) e containers — redesign private banking.
+   NBZ WEALTH — graficos e containers. So reta, sem cantos arredondados.
    ========================================================================== */
 
 .chart-card { display: flex; flex-direction: column; }
 .chart-card .chart-head {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
 }
-.chart-card h3 { font-family: var(--font-serif); font-size: 22px; font-weight: 600; }
+.chart-card h3 { font-family: var(--font-serif); font-size: 21px; font-weight: 300; }
 .chart-box { position: relative; width: 100%; }
 .chart-box.h-tall { height: 300px; }
 .chart-box.h-mid  { height: 240px; }
 .chart-box.h-pie  { height: 220px; }
 
 .chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
-.chart-legend .item { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text-3); }
-.chart-legend .dot { width: 8px; height: 8px; border-radius: 50%; }
+.chart-legend .item { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--bruma); }
+.chart-legend .dot { width: 7px; height: 7px; }

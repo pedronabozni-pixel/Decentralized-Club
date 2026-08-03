@@ -99,8 +99,13 @@
       if (!el) return;
       el.innerHTML = `
         <div class="brand">
-          <div class="mark">Decentralized<span>.</span></div>
-          <div class="sub">Club · Wealth</div>
+          <div class="brand-lockup">
+            ${this.markSVG(28)}
+            <div>
+              <div class="word">NBZ</div>
+              <div class="sub">Wealth</div>
+            </div>
+          </div>
         </div>
         <div class="brand-rule"></div>
         <div class="nav-scroll">${nav}</div>
@@ -112,6 +117,17 @@
           <button id="logoutBtn">Sair</button>
         </div>`;
       document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+    },
+
+    /**
+     * Simbolo NBZ: silhueta 54, faceta 26, cintura na altura 32, uma cor so.
+     */
+    markSVG(size = 28) {
+      return `<svg class="nbz-mark" width="${size}" height="${size}" viewBox="0 0 54 54"
+        xmlns="http://www.w3.org/2000/svg" aria-label="NBZ">
+        <polygon points="27,0 54,32 27,54 0,32"/>
+        <polygon class="facet" points="27,19 40,32 27,45 14,32"/>
+      </svg>`;
     },
 
     /**

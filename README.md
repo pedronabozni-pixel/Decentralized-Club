@@ -1,11 +1,12 @@
-# Decentralized Club — Plataforma de Gestão de Carteira
+# NBZ Wealth — Plataforma de Gestão de Patrimônio
 
 Plataforma web para gestão de carteira de investimentos (**criptomoedas + renda fixa**)
 com dados de mercado em tempo real, cálculo automático de preço médio, ganho/perda,
 distribuição da carteira, simulador de juros e dashboards.
 
-Estética premium/minimalista, dark mode — preto `#0A0A0A`, off-white `#F5F5F0` e
-acento dourado champagne `#C9A961`.
+Sistema visual NBZ Wealth: dark mode permanente, preto `#0A0A0A`, off-white `#F5F5F0`,
+champagne `#C9A961` como traço, bruma `#97928A` e linha `#1F1F1D`. Só reta, sem cantos
+arredondados. Cormorant Garamond 300 no valor, IBM Plex Mono no rótulo, Inter no dado.
 
 ---
 
@@ -103,7 +104,7 @@ npm run dev
 ## 📂 Estrutura
 
 ```
-decentralized-club/
+nbz-wealth/
 ├── backend/
 │   ├── server.js              # Express: API + frontend estático
 │   ├── config.js              # Configuração central (.env)
