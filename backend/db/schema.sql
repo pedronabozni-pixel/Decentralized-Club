@@ -89,3 +89,59 @@ CREATE TABLE IF NOT EXISTS price_history (
   date          TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_price_history_symbol ON price_history(crypto_symbol, date);
+
+-- Diario de operacoes de cripto: planos de trade ---------------------------
+-- Como este arquivo so cria tabela que nao existe, coluna nova depois do
+-- primeiro deploy nao chega a producao: tudo do plano precisa caber aqui.
+-- Listas de valores sao validadas na rota (Zod), sem CHECK, para que um valor
+-- novo no futuro nao exija recriar a tabela:
+--   market: perpetuo | spot
+--   direction: compra | venda
+--   status: planejado | aguardando_entrada | aberto | encerrado | cancelado
+CREATE TABLE IF NOT EXISTS trade_plans (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  symbol           TEXT    NOT NULL,          -- par da Binance, ex: MANTAUSDT
+  market           TEXT    NOT NULL,          -- perpetuo | spot
+  exchange         TEXT,                      -- corretora (texto livre)
+  direction        TEXT    NOT NULL,          -- compra | venda
+  status           TEXT    NOT NULL DEFAULT 'planejado',
+  call_source      TEXT,                      -- fonte da call
+  call_text        TEXT,                      -- texto original da call, colado
+  thesis           TEXT,                      -- tese e confluencias
+  capital_usd      REAL    NOT NULL CHECK (capital_usd > 0),   -- margem do plano (US$)
+  leverage         REAL    NOT NULL DEFAULT 1 CHECK (leverage >= 1),
+  structural_level REAL    CHECK (structural_level IS NULL OR structural_level > 0), -- invalidacao, separado do stop
+  stop_price       REAL    CHECK (stop_price IS NULL OR stop_price > 0),
+  created_at       TEXT    NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT    NOT NULL DEFAULT (datetime('now')),
+  closed_at        TEXT                       -- preenchido ao encerrar ou cancelar
+);
+CREATE INDEX IF NOT EXISTS idx_trade_plans_user ON trade_plans(user_id, status);
+
+-- Niveis de cada plano: uma linha por entrada, alvo, alerta, saida ou nota.
+-- kind (validado na rota):
+--   entrada: zone_from, zone_to, amount_usd (margem); executed_price e event_date ao preencher
+--   alvo:    zone_from, zone_to, content (descricao)
+--   alerta:  price, content (opcional); so registro do alerta criado na corretora
+--   saida:   price, fraction (parte da posicao, 0 a 1), event_date
+--   nota:    content, event_date
+-- user_id repetido aqui para toda consulta filtrar pelo dono, como no resto do banco.
+CREATE TABLE IF NOT EXISTS trade_plan_levels (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  plan_id        INTEGER NOT NULL REFERENCES trade_plans(id) ON DELETE CASCADE,
+  user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind           TEXT    NOT NULL,
+  position       INTEGER NOT NULL DEFAULT 0,  -- ordem dentro do tipo
+  zone_from      REAL    CHECK (zone_from IS NULL OR zone_from > 0),
+  zone_to        REAL    CHECK (zone_to IS NULL OR zone_to > 0),
+  amount_usd     REAL    CHECK (amount_usd IS NULL OR amount_usd > 0),
+  executed_price REAL    CHECK (executed_price IS NULL OR executed_price > 0),
+  price          REAL    CHECK (price IS NULL OR price > 0),
+  fraction       REAL    CHECK (fraction IS NULL OR (fraction > 0 AND fraction <= 1)),
+  event_date     TEXT,                        -- ISO date (YYYY-MM-DD)
+  content        TEXT,
+  created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_trade_plan_levels_plan ON trade_plan_levels(plan_id, kind, position);
+CREATE INDEX IF NOT EXISTS idx_trade_plan_levels_user ON trade_plan_levels(user_id);
