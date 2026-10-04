@@ -6,11 +6,8 @@ node_modules/
 .env.local
 .env.*.local
 
-# Banco de dados local (SQLite)
-data/*.db
-data/*.db-journal
-data/*.db-wal
-data/*.db-shm
+# Banco de dados local (SQLite) e qualquer copia ou exportacao ao lado dele
+data/
 
 # Logs
 *.log
