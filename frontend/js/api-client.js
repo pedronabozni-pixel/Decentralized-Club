@@ -100,5 +100,10 @@
     addGoal: (g) => request('POST', '/goals', g),
     updateGoalProgress: (id, initialAmount) => request('PATCH', `/goals/${id}/progress`, { initialAmount }),
     deleteGoal: (id) => request('DELETE', `/goals/${id}`),
+    journalEnabled: () => request('GET', '/journal/enabled'),
+    journalPlans: () => request('GET', '/journal/plans'),
+    addJournalPlan: (p) => request('POST', '/journal/plans', p),
+    updateJournalPlan: (id, p) => request('PUT', `/journal/plans/${id}`, p),
+    deleteJournalPlan: (id) => request('DELETE', `/journal/plans/${id}`),
   };
 })();

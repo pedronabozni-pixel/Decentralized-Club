@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diario · NBZ Wealth</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230A0A0A'/%3E%3Cpolygon points='32,7 51,37 32,58 13,37' fill='none' stroke='%23C9A961' stroke-width='2.5'/%3E%3Cpolygon points='32,22 45,37 32,50 19,37' fill='%23C9A961'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/diario.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Planos de trade</div>
+          <h1>Diario de operacoes</h1>
+        </div>
+        <div class="flex gap-sm">
+          <button class="btn btn-gold" id="newPlanBtn">+ Novo plano</button>
+        </div>
+      </div>
+
+      <!-- Totais -->
+      <div class="grid cols-3" id="journalKpis">
+        <div class="card stat"><div class="label">Resultado realizado</div><div class="stat-value serif skeleton">0000</div></div>
+        <div class="card stat"><div class="label">Planos encerrados</div><div class="stat-value skeleton">0000</div></div>
+        <div class="card stat"><div class="label">Taxa de acerto</div><div class="stat-value skeleton">0000</div></div>
+      </div>
+
+      <!-- Lista de planos -->
+      <div class="section-title">
+        <h2>Planos</h2>
+        <span class="flex items-center gap-md">
+          <span class="live-badge" id="priceBadge"><span class="dot"></span>buscando preco…</span>
+          <select class="input jr-filter" id="statusFilter" aria-label="Filtrar por status">
+            <option value="">Todos os status</option>
+            <option value="planejado">Planejado</option>
+            <option value="aguardando_entrada">Aguardando entrada</option>
+            <option value="aberto">Aberto</option>
+            <option value="encerrado">Encerrado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </span>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ativo</th>
+                <th>Direcao</th>
+                <th>Status</th>
+                <th class="num">Preco atual</th>
+                <th class="num">Preco medio</th>
+                <th class="num">Stop</th>
+                <th class="num">Perda no stop</th>
+                <th class="num">Resultado</th>
+              </tr>
+            </thead>
+            <tbody id="plansBody"><tr><td colspan="8" class="empty">Carregando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Detalhe do plano selecionado -->
+      <div id="planDetail"></div>
+    </main>
+  </div>
+
+  <!-- Modal: novo plano / editar plano -->
+  <div class="modal-overlay" id="planModal">
+    <div class="card modal pad-lg jr-modal">
+      <div class="modal-head">
+        <h3 id="planModalTitle">Novo plano</h3>
+        <button class="modal-close" data-close-modal="planModal">×</button>
+      </div>
+      <form id="planForm" novalidate>
+        <div class="field-row">
+          <div class="field">
+            <label for="pSymbol">Ativo</label>
+            <input class="input" type="text" id="pSymbol" placeholder="Ex: MANTAUSDT" autocomplete="off" required />
+            <div class="help" id="pSymbolHint">Par da Binance, com o USDT no fim.</div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="pMarket">Mercado</label>
+              <select class="input" id="pMarket">
+                <option value="perpetuo">Perpetuo</option>
+                <option value="spot">Spot</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="pExchange">Corretora</label>
+              <input class="input" type="text" id="pExchange" placeholder="Ex: Binance" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-row">
+            <div class="field">
+              <label for="pDirection">Direcao</label>
+              <select class="input" id="pDirection">
+                <option value="compra">Compra</option>
+                <option value="venda">Venda</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="pStatus">Status</label>
+              <select class="input" id="pStatus">
+                <option value="planejado">Planejado</option>
+                <option value="aguardando_entrada">Aguardando entrada</option>
+                <option value="aberto">Aberto</option>
+                <option value="encerrado">Encerrado</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="pCapital">Capital (US$)</label>
+              <input class="input" type="text" inputmode="decimal" id="pCapital" data-num="usd" placeholder="Ex: 20" autocomplete="off" required />
+              <div class="help jr-interp"></div>
+            </div>
+            <div class="field">
+              <label for="pLeverage">Alavancagem (x)</label>
+              <input class="input" type="text" inputmode="decimal" id="pLeverage" data-num="lev" placeholder="1" autocomplete="off" />
+              <div class="help jr-interp"></div>
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="pStructural">Nivel estrutural de invalidacao</label>
+            <input class="input" type="text" inputmode="decimal" id="pStructural" data-num="price" placeholder="Ex: 0,050" autocomplete="off" />
+            <div class="help jr-interp"></div>
+          </div>
+          <div class="field">
+            <label for="pStop">Stop</label>
+            <input class="input" type="text" inputmode="decimal" id="pStop" data-num="price" placeholder="Ex: 0,0485" autocomplete="off" required />
+            <div class="help jr-interp"></div>
+          </div>
+        </div>
+
+        <div class="jr-section">
+          <div class="jr-section-head"><h4>Entradas</h4><button type="button" class="btn btn-sm btn-ghost" data-add="entrada">+ Entrada</button></div>
+          <div class="jr-rows" id="rows-entrada"></div>
+        </div>
+        <div class="jr-section">
+          <div class="jr-section-head"><h4>Alvos</h4><button type="button" class="btn btn-sm btn-ghost" data-add="alvo">+ Alvo</button></div>
+          <div class="jr-rows" id="rows-alvo"></div>
+        </div>
+        <div class="jr-section">
+          <div class="jr-section-head"><h4>Alertas criados na corretora</h4><button type="button" class="btn btn-sm btn-ghost" data-add="alerta">+ Alerta</button></div>
+          <div class="jr-rows" id="rows-alerta"></div>
+        </div>
+        <div class="jr-section">
+          <div class="jr-section-head"><h4>Saidas realizadas</h4><button type="button" class="btn btn-sm btn-ghost" data-add="saida">+ Saida</button></div>
+          <div class="jr-rows" id="rows-saida"></div>
+        </div>
+        <div class="jr-section">
+          <div class="jr-section-head"><h4>Notas</h4><button type="button" class="btn btn-sm btn-ghost" data-add="nota">+ Nota</button></div>
+          <div class="jr-rows" id="rows-nota"></div>
+        </div>
+
+        <div class="jr-section">
+          <div class="field-row">
+            <div class="field">
+              <label for="pCallSource">Fonte da call</label>
+              <input class="input" type="text" id="pCallSource" placeholder="Opcional" autocomplete="off" />
+            </div>
+            <div></div>
+          </div>
+          <div class="field">
+            <label for="pCallText">Texto original da call</label>
+            <textarea class="input" id="pCallText" placeholder="Cole aqui a call como veio"></textarea>
+          </div>
+          <div class="field">
+            <label for="pThesis">Tese e confluencias</label>
+            <textarea class="input" id="pThesis" placeholder="Por que este trade"></textarea>
+          </div>
+        </div>
+
+        <div class="flex gap-md">
+          <button type="button" class="btn btn-ghost w-full" data-close-modal="planModal">Cancelar</button>
+          <button type="submit" class="btn btn-gold w-full" id="planSubmit">Salvar plano</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api-client.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/futures-price.js"></script>
+  <script src="/js/diario.js"></script>
+</body>
+</html>

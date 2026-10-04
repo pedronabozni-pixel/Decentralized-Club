@@ -1,0 +1,79 @@
+/* ==========================================================================
+   Diario de operacoes. So usa os tokens de styles.css (nenhuma cor ou
+   fonte nova) e so seletores com prefixo jr-, sem efeito nas outras telas.
+   ========================================================================== */
+
+.jr-filter { width: auto; padding: 8px 34px 8px 12px; font-size: 11.5px; }
+
+.jr-plan-row { cursor: pointer; }
+.jr-plan-row.jr-selected { background: var(--gold-row-hover); }
+.jr-plan-row.jr-selected td:first-child { box-shadow: inset 2px 0 0 var(--gold); }
+
+.jr-sub { font: 400 10px var(--font-mono); color: var(--text-4); letter-spacing: 0.02em; }
+.jr-sub.negative { color: var(--red); }
+.jr-nowrap, .jr-plan-row .jr-sub, #priceBadge { white-space: nowrap; }
+.jr-stack .jr-sub { display: block; margin-top: 2px; }
+.jr-status {
+  display: inline-block; padding: 3px 8px; white-space: nowrap;
+  font: 400 9px var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-2); border: 1px solid var(--linha-forte);
+}
+.jr-status.aberto { color: var(--gold); border-color: var(--gold-line); }
+.jr-status.encerrado, .jr-status.cancelado { color: var(--text-4); }
+
+/* Detalhe */
+.jr-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 11.5px; color: var(--bruma); margin: -6px 0 18px; }
+.jr-meta strong { color: var(--text); font-weight: 500; }
+.jr-card-title {
+  font: 400 9px var(--font-mono); letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--bruma); margin-bottom: 14px;
+}
+.jr-card-title + .table-wrap { margin-bottom: 26px; }
+.jr-kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: baseline; }
+.jr-kv dt { font-size: 12px; color: var(--text-2); padding: 9px 0; border-bottom: 1px solid var(--linha); }
+.jr-kv dd { font-size: 12.5px; color: var(--text); text-align: right; padding: 9px 0; border-bottom: 1px solid var(--linha); font-variant-numeric: tabular-nums; }
+.jr-kv dd .jr-sub { display: block; margin-top: 2px; }
+.jr-note-approx { font-size: 10.5px; color: var(--text-5); margin-top: 12px; line-height: 1.55; }
+.jr-warn {
+  margin-top: 14px; padding: 11px 14px; font-size: 12px; line-height: 1.55;
+  color: var(--red); background: var(--red-wash); border: 1px solid rgba(216, 115, 107, 0.35);
+}
+.jr-text { white-space: pre-wrap; word-break: break-word; font-size: 12.5px; color: var(--text-2); line-height: 1.65; }
+.jr-text + .jr-card-title { margin-top: 22px; }
+.jr-list { list-style: none; }
+.jr-list li { padding: 10px 0; border-bottom: 1px solid var(--linha); font-size: 12.5px; }
+.jr-list li:last-child { border-bottom: none; }
+.jr-list .jr-sub { display: block; margin-bottom: 4px; }
+
+/* Formulario do plano */
+.jr-modal { max-width: 980px; }
+.jr-modal textarea.input { min-height: 84px; resize: vertical; line-height: 1.55; }
+.jr-section { border-top: 1px solid var(--linha); padding-top: 18px; margin-top: 6px; margin-bottom: 18px; }
+.jr-section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.jr-section-head h4 {
+  font: 400 9px var(--font-mono); letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold);
+}
+.jr-rows { display: flex; flex-direction: column; gap: 12px; }
+.jr-rows:empty::after { content: 'Nenhum.'; font-size: 11px; color: var(--text-5); }
+.jr-row { display: grid; gap: 10px; align-items: start; padding-bottom: 12px; border-bottom: 1px solid var(--linha); }
+.jr-row:last-child { border-bottom: none; padding-bottom: 0; }
+.jr-row.jr-entrada { grid-template-columns: repeat(4, 1fr) 150px auto; }
+.jr-row.jr-alvo { grid-template-columns: 1fr 1fr 2fr auto; }
+.jr-row.jr-alerta { grid-template-columns: 1fr 3fr auto; }
+.jr-row.jr-saida { grid-template-columns: 1fr 1fr 150px auto; }
+.jr-row.jr-nota { grid-template-columns: 150px 1fr auto; }
+.jr-row label {
+  display: block; font: 400 8px var(--font-mono); letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text-4); margin-bottom: 6px;
+}
+.jr-row .input { padding: 9px 10px; font-size: 12.5px; }
+.jr-row textarea.input { min-height: 40px; }
+.jr-row .jr-remove { margin-top: 19px; }
+.jr-interp { min-height: 14px; margin-top: 5px; }
+.jr-interp.bad { color: var(--red); }
+
+@media (max-width: 760px) {
+  .jr-row.jr-entrada, .jr-row.jr-alvo, .jr-row.jr-saida { grid-template-columns: 1fr 1fr; }
+  .jr-row.jr-alerta, .jr-row.jr-nota { grid-template-columns: 1fr; }
+  .jr-row .jr-remove { margin-top: 0; justify-self: start; }
+}
