@@ -39,6 +39,9 @@
   const tone = (v) => (v > 0 ? 'positive' : v < 0 ? 'negative' : '');
   const zone = (from, to) => `<span class="jr-nowrap">${fmtPrice(from)}</span>${to > 0 && to !== from
     ? ` a <span class="jr-nowrap">${fmtPrice(to)}</span>` : ''}`;
+  // Sem capital (permitido em planejado e cancelado), nenhum calculo em US$ aparece.
+  const hasCapital = (p) => p.capitalUsd > 0;
+  const NO_CAPITAL = '<span class="jr-sub">defina o capital</span>';
   // Perda no stop; se a posicao liquida antes do stop, a perda e a margem inteira.
   const stopLoss = (s) => `<span class="${tone(s.effectivePnlUsd)}">${fmtUSD(s.effectivePnlUsd)}</span>${s.stopBeyondLiquidation
     ? '<span class="jr-sub negative">liquida antes do stop</span>'
@@ -142,7 +145,7 @@
         <td class="num cell-price">${cur ? fmtPrice(cur) : '<span class="jr-sub">sem preco</span>'}</td>
         <td class="num">${fmtPrice(c.avgPrice)}</td>
         <td class="num">${fmtPrice(p.stopPrice)}<br>${distSub(cur, p.stopPrice)}</td>
-        <td class="num jr-stack">${atStop ? stopLoss(atStop) : '-'}</td>
+        <td class="num jr-stack">${!hasCapital(p) ? NO_CAPITAL : atStop ? stopLoss(atStop) : '-'}</td>
         <td class="num">${result}</td>
       </tr>`;
   }
@@ -155,8 +158,9 @@
     const c = p.calc;
     const cur = currentPrice(p.symbol);
     const lev = p.leverage > 1;
+    const capital = hasCapital(p);
 
-    const entryRows = c.entries.map((e) => `
+    const entryRows = c.entries.length ? c.entries.map((e) => `
       <tr>
         <td>E${e.order}</td>
         <td>${zone(e.zoneFrom, e.zoneTo)}</td>
@@ -167,7 +171,7 @@
         <td class="num">${fmtQty(e.quantity)}</td>
         <td class="num ${e.toStopPct < 0 ? 'negative' : ''}">${e.toStopPct == null ? '-' : fmtPctAbs(e.toStopPct)}</td>
         <td class="num">${dist(cur, e.price) == null ? '-' : fmtPct(dist(cur, e.price))}</td>
-      </tr>`).join('');
+      </tr>`).join('') : '<tr><td colspan="7" class="empty">Sem entradas.</td></tr>';
 
     const targetRows = c.targets.map((t) => `
       <tr>
@@ -182,7 +186,8 @@
 
     const all = c.ifAllFilled;
     const first = c.ifFirstOnly;
-    const stopLine = (s, label) => (s ? `<dt>${label}</dt><dd>${stopLoss(s)}</dd>` : '');
+    const stopLine = (s, label) => `<dt>${label}</dt><dd>${!capital ? NO_CAPITAL
+      : s ? stopLoss(s) : '<span class="jr-sub">sem entradas</span>'}</dd>`;
     const beyond = Boolean(all?.stopBeyondLiquidation || first?.stopBeyondLiquidation);
     const risk = `
       <dl class="jr-kv">
@@ -205,7 +210,9 @@
       <div class="card pad-lg mt-lg">
         <div class="jr-card-title">Resultado realizado${p.status === 'encerrado' ? '' : ' (parcial)'}</div>
         <dl class="jr-kv">
-          <dt>Resultado</dt><dd><span class="${tone(r.pnlUsd)}">${fmtUSD(r.pnlUsd)}</span><span class="jr-sub">${fmtPct(r.pnlPct)} sobre a margem usada de ${fmtUSD(r.marginUsd)}</span></dd>
+          <dt>Resultado</dt><dd>${capital
+            ? `<span class="${tone(r.pnlUsd)}">${fmtUSD(r.pnlUsd)}</span><span class="jr-sub">${fmtPct(r.pnlPct)} sobre a margem usada de ${fmtUSD(r.marginUsd)}</span>`
+            : NO_CAPITAL}</dd>
           <dt>Preco medio executado</dt><dd>${fmtPrice(r.avgPrice)}</dd>
           <dt>Parte da posicao encerrada</dt><dd>${fmtPctAbs(r.closedFraction * 100)}</dd>
         </dl>
@@ -213,7 +220,7 @@
           <thead><tr><th>Data</th><th class="num">Preco</th><th class="num">Fracao</th><th class="num">Resultado</th></tr></thead>
           <tbody>${r.exits.map((x) => `
             <tr><td>${x.eventDate ? fmtDate(x.eventDate) : '-'}</td><td class="num">${fmtPrice(x.price)}</td>
-              <td class="num">${fmtPctAbs(x.fraction * 100)}</td><td class="num ${tone(x.pnlUsd)}">${fmtUSD(x.pnlUsd)}</td></tr>`).join('')}</tbody>
+              <td class="num">${fmtPctAbs(x.fraction * 100)}</td><td class="num ${capital ? tone(x.pnlUsd) : ''}">${capital ? fmtUSD(x.pnlUsd) : '-'}</td></tr>`).join('')}</tbody>
         </table></div>
       </div>` : '';
 
@@ -245,7 +252,7 @@
       <div class="jr-meta">
         <span><strong>${esc(STATUS[p.status] || p.status)}</strong></span>
         <span>${esc(MARKET[p.market] || p.market)}${p.exchange ? ` · ${esc(p.exchange)}` : ''}</span>
-        <span>Capital <strong>${fmtUSD(p.capitalUsd)}</strong></span>
+        <span>Capital <strong>${capital ? fmtUSD(p.capitalUsd) : 'defina o capital'}</strong></span>
         <span>Alavancagem <strong>${fmtLev(p.leverage)}</strong></span>
         <span>Preco atual <strong>${cur ? fmtPrice(cur) : 'indisponivel'}</strong></span>
         <span>Criado em ${fmtDateTime(p.createdAt)}</span>
@@ -520,9 +527,8 @@
     if (form.querySelector('.jr-interp.bad')) { toast('Ha numero que nao foi reconhecido. Confira os campos marcados.'); return; }
     const payload = buildPayload();
     if (!payload.symbol) { toast('Informe o ativo (ex: MANTAUSDT).'); return; }
-    if (!(payload.capitalUsd > 0)) { toast('Informe o capital em US$.'); return; }
     if (!(payload.stopPrice > 0)) { toast('Informe o stop.'); return; }
-    if (!payload.entries.length) { toast('Informe ao menos uma entrada.'); return; }
+    // Capital e entradas dependem do status: quem decide e o servidor.
 
     const btn = document.getElementById('planSubmit');
     const label = btn.textContent;
@@ -539,7 +545,7 @@
       editingId = null;
       await load();
     } catch (err) {
-      toast(err.details?.[0]?.message || err.message);
+      toast(err.details?.map((d) => d.message).join(' ') || err.message);
     } finally {
       btn.disabled = false;
       btn.textContent = label;
