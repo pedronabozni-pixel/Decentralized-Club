@@ -39,9 +39,17 @@
   const tone = (v) => (v > 0 ? 'positive' : v < 0 ? 'negative' : '');
   const zone = (from, to) => `<span class="jr-nowrap">${fmtPrice(from)}</span>${to > 0 && to !== from
     ? ` a <span class="jr-nowrap">${fmtPrice(to)}</span>` : ''}`;
-  // Sem capital (permitido em planejado e cancelado), nenhum calculo em US$ aparece.
-  const hasCapital = (p) => p.capitalUsd > 0;
-  const NO_CAPITAL = '<span class="jr-sub">defina o capital</span>';
+  // Rascunho (planejado, cancelado) pode estar incompleto: no lugar do calculo
+  // aparece o que falta definir. O servidor diz o que falta em calc.missing.
+  const DEFINE = {
+    capital: 'defina o capital', entries: 'defina as entradas',
+    values: 'defina os valores', stop: 'defina o stop',
+  };
+  const needs = (c, keys) => keys.filter((k) => c.missing?.[k])
+    .map((k) => `<span class="jr-sub jr-nowrap">${DEFINE[k]}</span>`).join('');
+  const NEED_PRICE = ['entries', 'values'];                  // preco medio, retorno, liquidacao
+  const NEED_RR = ['entries', 'values', 'stop'];             // risco/retorno
+  const NEED_LOSS = ['capital', 'entries', 'values', 'stop']; // perda em US$
   // Perda no stop; se a posicao liquida antes do stop, a perda e a margem inteira.
   const stopLoss = (s) => `<span class="${tone(s.effectivePnlUsd)}">${fmtUSD(s.effectivePnlUsd)}</span>${s.stopBeyondLiquidation
     ? '<span class="jr-sub negative">liquida antes do stop</span>'
@@ -143,9 +151,9 @@
         <td>${esc(DIRECTION[p.direction] || p.direction)}${p.leverage > 1 ? ` <span class="jr-sub">${fmtLev(p.leverage)}</span>` : ''}</td>
         <td><span class="jr-status ${esc(p.status)}">${esc(STATUS[p.status] || p.status)}</span></td>
         <td class="num cell-price">${cur ? fmtPrice(cur) : '<span class="jr-sub">sem preco</span>'}</td>
-        <td class="num">${fmtPrice(c.avgPrice)}</td>
+        <td class="num jr-stack">${needs(c, NEED_PRICE) || fmtPrice(c.avgPrice)}</td>
         <td class="num">${fmtPrice(p.stopPrice)}<br>${distSub(cur, p.stopPrice)}</td>
-        <td class="num jr-stack">${!hasCapital(p) ? NO_CAPITAL : atStop ? stopLoss(atStop) : '-'}</td>
+        <td class="num jr-stack">${needs(c, NEED_LOSS) || (atStop ? stopLoss(atStop) : '-')}</td>
         <td class="num">${result}</td>
       </tr>`;
   }
@@ -158,13 +166,12 @@
     const c = p.calc;
     const cur = currentPrice(p.symbol);
     const lev = p.leverage > 1;
-    const capital = hasCapital(p);
 
     const entryRows = c.entries.length ? c.entries.map((e) => `
       <tr>
         <td>E${e.order}</td>
         <td>${zone(e.zoneFrom, e.zoneTo)}</td>
-        <td class="num">${fmtUSD(e.amountUsd)}</td>
+        <td class="num">${e.amountUsd > 0 ? fmtUSD(e.amountUsd) : '<span class="jr-sub jr-nowrap">defina o valor</span>'}</td>
         <td class="num">${fmtPrice(e.price)}<br><span class="jr-sub">${e.filled
           ? `executada${e.eventDate ? ` em ${fmtDate(e.eventDate)}` : ''}`
           : 'ponto medio'}</span></td>
@@ -178,49 +185,53 @@
         <td>A${t.order}</td>
         <td>${zone(t.zoneFrom, t.zoneTo)}${t.content ? `<br><span class="jr-sub">${esc(t.content)}</span>` : ''}</td>
         <td class="num">${fmtPrice(t.mid)}</td>
-        <td class="num"><span class="${tone(t.returnPct)}">${t.returnPct == null ? '-' : fmtPct(t.returnPct)}</span>${lev && t.returnPctMargin != null
-          ? `<br><span class="jr-sub">${fmtPct(t.returnPctMargin)} na margem</span>` : ''}</td>
-        <td class="num">${t.rr == null ? '-' : twoFmt.format(t.rr)}</td>
+        <td class="num jr-stack">${needs(c, NEED_PRICE) || `<span class="${tone(t.returnPct)}">${t.returnPct == null ? '-' : fmtPct(t.returnPct)}</span>${lev && t.returnPctMargin != null
+          ? `<span class="jr-sub">${fmtPct(t.returnPctMargin)} na margem</span>` : ''}`}</td>
+        <td class="num jr-stack">${needs(c, NEED_RR) || (t.rr == null ? '-' : twoFmt.format(t.rr))}</td>
         <td class="num">${dist(cur, t.mid) == null ? '-' : fmtPct(dist(cur, t.mid))}</td>
       </tr>`).join('');
 
     const all = c.ifAllFilled;
     const first = c.ifFirstOnly;
-    const stopLine = (s, label) => `<dt>${label}</dt><dd>${!capital ? NO_CAPITAL
-      : s ? stopLoss(s) : '<span class="jr-sub">sem entradas</span>'}</dd>`;
+    const stopLine = (s, label) => `<dt>${label}</dt><dd>${needs(c, NEED_LOSS) || (s ? stopLoss(s) : '-')}</dd>`;
+    const liqLine = (price, s, label) => `<dt>${label}</dt>
+      <dd class="${s?.stopBeyondLiquidation ? 'negative' : ''}">${needs(c, NEED_PRICE) || fmtPrice(price)}</dd>`;
     const beyond = Boolean(all?.stopBeyondLiquidation || first?.stopBeyondLiquidation);
     const risk = `
       <dl class="jr-kv">
-        <dt>Preco medio ponderado</dt><dd>${fmtPrice(c.avgPrice)}<span class="jr-sub">pela quantidade de moedas</span></dd>
-        <dt>Stop</dt><dd>${fmtPrice(p.stopPrice)}${distSub(cur, p.stopPrice)}</dd>
+        <dt>Preco medio ponderado</dt><dd>${needs(c, NEED_PRICE)
+          || `${fmtPrice(c.avgPrice)}<span class="jr-sub">pela quantidade de moedas</span>`}</dd>
+        <dt>Stop</dt><dd>${needs(c, ['stop']) || `${fmtPrice(p.stopPrice)}${distSub(cur, p.stopPrice)}`}</dd>
         <dt>Nivel estrutural</dt><dd>${fmtPrice(p.structuralLevel)}${distSub(cur, p.structuralLevel)}</dd>
         ${stopLine(all, 'Perda se todas as entradas preencherem')}
         ${stopLine(first, 'Perda se so a 1a preencher')}
         ${all ? `<dt>Do preco medio ate o stop</dt><dd>${fmtPct(all.movePct)}${lev
           ? `<span class="jr-sub">${fmtPct(all.marginPct)} na margem (${fmtLev(p.leverage)})</span>` : ''}</dd>` : ''}
-        ${lev ? `
-        <dt>Liquidacao aprox., todas as entradas</dt><dd class="${all?.stopBeyondLiquidation ? 'negative' : ''}">${fmtPrice(all?.liquidation)}</dd>
-        <dt>Liquidacao aprox., so a 1a</dt><dd class="${first?.stopBeyondLiquidation ? 'negative' : ''}">${fmtPrice(first?.liquidation)}</dd>` : ''}
+        ${lev ? liqLine(c.liquidation?.all, all, 'Liquidacao aprox., todas as entradas')
+          + liqLine(c.liquidation?.firstOnly, first, 'Liquidacao aprox., so a 1a') : ''}
       </dl>
       ${lev ? `<div class="jr-note-approx">Liquidacao aproximada: margem isolada, sem taxas e sem margem de manutencao. A liquidacao real acontece um pouco antes destes precos.</div>` : ''}
       ${beyond ? `<div class="jr-warn">O stop esta alem da liquidacao aproximada${all?.stopBeyondLiquidation ? '' : ' no cenario em que so a 1a entrada preenche'}: a posicao seria liquidada antes de chegar no stop, e a perda seria a margem inteira.</div>` : ''}`;
 
+    // Saidas aparecem sempre; o resultado em US$ so com capital e valores.
     const r = c.realized;
-    const realized = r ? `
+    const money = Boolean(r) && !c.missing?.capital;
+    const exitsList = r ? r.exits : p.exits;
+    const realized = exitsList.length ? `
       <div class="card pad-lg mt-lg">
         <div class="jr-card-title">Resultado realizado${p.status === 'encerrado' ? '' : ' (parcial)'}</div>
         <dl class="jr-kv">
-          <dt>Resultado</dt><dd>${capital
+          <dt>Resultado</dt><dd class="jr-stack">${money
             ? `<span class="${tone(r.pnlUsd)}">${fmtUSD(r.pnlUsd)}</span><span class="jr-sub">${fmtPct(r.pnlPct)} sobre a margem usada de ${fmtUSD(r.marginUsd)}</span>`
-            : NO_CAPITAL}</dd>
-          <dt>Preco medio executado</dt><dd>${fmtPrice(r.avgPrice)}</dd>
-          <dt>Parte da posicao encerrada</dt><dd>${fmtPctAbs(r.closedFraction * 100)}</dd>
+            : needs(c, ['capital', 'values']) || '-'}</dd>
+          <dt>Preco medio executado</dt><dd>${r ? fmtPrice(r.avgPrice) : needs(c, ['values']) || '-'}</dd>
+          <dt>Parte da posicao encerrada</dt><dd>${fmtPctAbs(exitsList.reduce((sum, x) => sum + x.fraction, 0) * 100)}</dd>
         </dl>
         <div class="table-wrap mt-lg"><table>
           <thead><tr><th>Data</th><th class="num">Preco</th><th class="num">Fracao</th><th class="num">Resultado</th></tr></thead>
-          <tbody>${r.exits.map((x) => `
+          <tbody>${exitsList.map((x) => `
             <tr><td>${x.eventDate ? fmtDate(x.eventDate) : '-'}</td><td class="num">${fmtPrice(x.price)}</td>
-              <td class="num">${fmtPctAbs(x.fraction * 100)}</td><td class="num ${capital ? tone(x.pnlUsd) : ''}">${capital ? fmtUSD(x.pnlUsd) : '-'}</td></tr>`).join('')}</tbody>
+              <td class="num">${fmtPctAbs(x.fraction * 100)}</td><td class="num ${money ? tone(x.pnlUsd) : ''}">${money ? fmtUSD(x.pnlUsd) : '-'}</td></tr>`).join('')}</tbody>
         </table></div>
       </div>` : '';
 
@@ -252,7 +263,7 @@
       <div class="jr-meta">
         <span><strong>${esc(STATUS[p.status] || p.status)}</strong></span>
         <span>${esc(MARKET[p.market] || p.market)}${p.exchange ? ` · ${esc(p.exchange)}` : ''}</span>
-        <span>Capital <strong>${capital ? fmtUSD(p.capitalUsd) : 'defina o capital'}</strong></span>
+        <span>Capital <strong>${c.missing?.capital ? 'defina o capital' : fmtUSD(p.capitalUsd)}</strong></span>
         <span>Alavancagem <strong>${fmtLev(p.leverage)}</strong></span>
         <span>Preco atual <strong>${cur ? fmtPrice(cur) : 'indisponivel'}</strong></span>
         <span>Criado em ${fmtDateTime(p.createdAt)}</span>
@@ -527,8 +538,7 @@
     if (form.querySelector('.jr-interp.bad')) { toast('Ha numero que nao foi reconhecido. Confira os campos marcados.'); return; }
     const payload = buildPayload();
     if (!payload.symbol) { toast('Informe o ativo (ex: MANTAUSDT).'); return; }
-    if (!(payload.stopPrice > 0)) { toast('Informe o stop.'); return; }
-    // Capital e entradas dependem do status: quem decide e o servidor.
+    // Capital, entradas, valores e stop dependem do status: quem decide e o servidor.
 
     const btn = document.getElementById('planSubmit');
     const label = btn.textContent;
