@@ -93,8 +93,10 @@ CREATE INDEX IF NOT EXISTS idx_price_history_symbol ON price_history(crypto_symb
 -- Diario de operacoes de cripto: planos de trade ---------------------------
 -- Como este arquivo so cria tabela que nao existe, coluna nova depois do
 -- primeiro deploy nao chega a producao: tudo do plano precisa caber aqui.
--- Listas de valores sao validadas na rota (Zod), sem CHECK, para que um valor
--- novo no futuro nao exija recriar a tabela:
+-- O banco so guarda limites fisicos do dado (preco > 0, fracao ate 100%).
+-- Regra de negocio fica na rota (Zod), para mudar sem recriar a tabela:
+-- listas de valores e o que cada status exige (ex: capital so a partir de
+-- aguardando entrada).
 --   market: perpetuo | spot
 --   direction: compra | venda
 --   status: planejado | aguardando_entrada | aberto | encerrado | cancelado
@@ -109,7 +111,7 @@ CREATE TABLE IF NOT EXISTS trade_plans (
   call_source      TEXT,                      -- fonte da call
   call_text        TEXT,                      -- texto original da call, colado
   thesis           TEXT,                      -- tese e confluencias
-  capital_usd      REAL    NOT NULL CHECK (capital_usd > 0),   -- margem do plano (US$)
+  capital_usd      REAL    CHECK (capital_usd IS NULL OR capital_usd > 0), -- margem do plano (US$)
   leverage         REAL    NOT NULL DEFAULT 1 CHECK (leverage >= 1),
   structural_level REAL    CHECK (structural_level IS NULL OR structural_level > 0), -- invalidacao, separado do stop
   stop_price       REAL    CHECK (stop_price IS NULL OR stop_price > 0),

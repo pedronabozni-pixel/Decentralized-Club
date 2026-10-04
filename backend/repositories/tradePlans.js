@@ -46,7 +46,7 @@ function planParams(userId, data) {
     callSource: data.callSource ?? null,
     callText: data.callText ?? null,
     thesis: data.thesis ?? null,
-    capitalUsd: data.capitalUsd,
+    capitalUsd: data.capitalUsd ?? null,
     leverage: data.leverage ?? 1,
     structuralLevel: data.structuralLevel ?? null,
     stopPrice: data.stopPrice ?? null,

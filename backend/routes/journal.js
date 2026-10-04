@@ -24,6 +24,13 @@ router.use((req, res, next) => {
 const MARKETS = ['perpetuo', 'spot'];
 const DIRECTIONS = ['compra', 'venda'];
 const STATUSES = ['planejado', 'aguardando_entrada', 'aberto', 'encerrado', 'cancelado'];
+const STATUS_LABEL = {
+  planejado: 'Planejado', aguardando_entrada: 'Aguardando entrada', aberto: 'Aberto',
+  encerrado: 'Encerrado', cancelado: 'Cancelado',
+};
+// Planejado e cancelado podem ficar sem capital e sem entradas; a partir de
+// aguardando entrada o plano precisa dos dois.
+const NEEDS_CAPITAL = ['aguardando_entrada', 'aberto', 'encerrado'];
 
 // Campo vazio ('' ou null) vira null; texto com so espacos tambem.
 const blankToNull = (v) => (v === '' || v === null ? null : v);
@@ -31,28 +38,28 @@ const text = (max) => z.preprocess(
   (v) => (typeof v === 'string' ? v.trim() || null : v),
   z.string().max(max, `Texto acima de ${max} caracteres.`).nullable()
 ).optional();
-const price = (label) => z.coerce.number({ invalid_type_error: `${label} invalido.` })
+const positive = (label) => z.coerce.number({ invalid_type_error: `${label} invalido.` })
   .positive(`${label} invalido.`);
-const optionalPrice = (label) => z.preprocess(blankToNull, price(label).nullable()).optional();
+const optionalPositive = (label) => z.preprocess(blankToNull, positive(label).nullable()).optional();
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data invalida (YYYY-MM-DD).');
 const optionalDate = z.preprocess(blankToNull, isoDate.nullable()).optional();
 const oneOf = (values, label) => z.enum(values, { errorMap: () => ({ message: `${label} invalido.` }) });
 
 const entrySchema = z.object({
-  zoneFrom: price('Preco da entrada'),
-  zoneTo: optionalPrice('Preco da entrada'),
+  zoneFrom: positive('Preco da entrada'),
+  zoneTo: optionalPositive('Preco da entrada'),
   amountUsd: z.coerce.number().positive('Valor da entrada invalido.'),
-  executedPrice: optionalPrice('Preco executado'),
+  executedPrice: optionalPositive('Preco executado'),
   eventDate: optionalDate,
 });
 const targetSchema = z.object({
-  zoneFrom: price('Preco do alvo'),
-  zoneTo: optionalPrice('Preco do alvo'),
+  zoneFrom: positive('Preco do alvo'),
+  zoneTo: optionalPositive('Preco do alvo'),
   content: text(300),
 });
-const alertSchema = z.object({ price: price('Preco do alerta'), content: text(300) });
+const alertSchema = z.object({ price: positive('Preco do alerta'), content: text(300) });
 const exitSchema = z.object({
-  price: price('Preco da saida'),
+  price: positive('Preco da saida'),
   fraction: z.coerce.number().gt(0, 'Fracao da saida invalida.').max(1, 'Fracao da saida acima de 100%.'),
   eventDate: optionalDate,
 });
@@ -72,22 +79,28 @@ const planSchema = z.object({
   callSource: text(200),
   callText: text(10000),
   thesis: text(10000),
-  capitalUsd: z.coerce.number().positive('Capital invalido.'),
+  capitalUsd: optionalPositive('Capital'),
   leverage: z.preprocess(
     (v) => (v === '' || v == null ? 1 : v),
     z.coerce.number().min(1, 'Alavancagem minima e 1x.').max(200, 'Alavancagem maxima e 200x.')
   ),
-  structuralLevel: optionalPrice('Nivel estrutural'),
-  stopPrice: price('Stop'),
-  entries: z.array(entrySchema).min(1, 'Informe ao menos uma entrada.').max(20),
+  structuralLevel: optionalPositive('Nivel estrutural'),
+  stopPrice: positive('Stop'),
+  entries: z.array(entrySchema).max(20).default([]),
   targets: z.array(targetSchema).max(20).default([]),
   alerts: z.array(alertSchema).max(30).default([]),
   exits: z.array(exitSchema).max(30).default([]),
   notes: z.array(noteSchema).max(300).default([]),
 }).superRefine((p, ctx) => {
   const issue = (path, message) => ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
+  if (NEEDS_CAPITAL.includes(p.status)) {
+    const label = STATUS_LABEL[p.status];
+    if (!(p.capitalUsd > 0)) issue('capitalUsd', `O status ${label} exige capital: defina o capital do plano em US$.`);
+    if (!p.entries.length) issue('entries', `O status ${label} exige ao menos uma entrada.`);
+  }
+  // Entradas acima do capital so e erro quando o plano tem capital.
   const entriesUsd = p.entries.reduce((s, e) => s + e.amountUsd, 0);
-  if (entriesUsd > p.capitalUsd * (1 + 1e-9)) {
+  if (p.capitalUsd > 0 && entriesUsd > p.capitalUsd * (1 + 1e-9)) {
     issue('entries', `As entradas somam US$ ${fmtUsd(entriesUsd)} e passam do capital de US$ ${fmtUsd(p.capitalUsd)}.`);
   }
   if (p.market === 'spot' && p.leverage !== 1) {
