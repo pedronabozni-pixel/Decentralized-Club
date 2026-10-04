@@ -1,25 +1,18 @@
 // ==========================================================================
 //  Rotas do diario de operacoes de cripto (/api/journal).
-//  Liberado so para os e-mails de JOURNAL_EMAILS: para qualquer outra conta,
-//  toda rota daqui responde 404, como se nao existisse. O menu pergunta em
-//  /api/journal/enabled, entao quem decide se o item aparece e o servidor.
+//  Toda conta logada usa o diario; cada uma so le, edita e apaga os proprios
+//  planos (user_id em toda consulta). Sem login, 401.
 //  O preco atual nao passa pelo servidor: a tela busca na Binance Futures.
 // ==========================================================================
 import { Router } from 'express';
 import { z } from 'zod';
-import { config } from '../config.js';
 import { requireAuth } from '../middleware/auth.js';
-import { asyncHandler, validate, notFound } from '../middleware/errorHandler.js';
+import { asyncHandler, validate } from '../middleware/errorHandler.js';
 import { tradePlansRepo } from '../repositories/tradePlans.js';
 import { analyzePlan, journalSummary } from '../services/tradeCalc.js';
 
 const router = Router();
 router.use(requireAuth);
-router.use((req, res, next) => {
-  const email = String(req.user.email || '').toLowerCase();
-  if (!config.journalEmails.has(email)) return notFound(req, res);
-  next();
-});
 
 const MARKETS = ['perpetuo', 'spot'];
 const DIRECTIONS = ['compra', 'venda'];
@@ -132,11 +125,6 @@ const planSchema = z.object({
 });
 
 const withCalc = (plan) => ({ ...plan, calc: analyzePlan(plan) });
-
-// GET /api/journal/enabled -> 200 so para quem tem o diario (o menu usa isto)
-router.get('/enabled', (req, res) => {
-  res.json({ enabled: true });
-});
 
 // GET /api/journal/plans -> todos os planos do usuario + totais
 router.get('/plans', asyncHandler(async (req, res) => {

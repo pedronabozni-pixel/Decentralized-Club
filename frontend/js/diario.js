@@ -88,8 +88,6 @@
     try {
       data = await window.API.journalPlans();
     } catch (err) {
-      // 404: o diario nao esta liberado para esta conta.
-      if (err.status === 404) { window.location.href = 'dashboard.html'; return; }
       window.App.toast(err.message || 'Falha ao carregar o diario.', 'error');
       return;
     }

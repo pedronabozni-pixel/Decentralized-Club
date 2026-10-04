@@ -36,16 +36,6 @@ export const config = {
 
   coinmarketcapKey: process.env.COINMARKETCAP_API_KEY || '',
 
-  // Diario de operacoes: liberado so para estes e-mails (JOURNAL_EMAILS,
-  // separados por virgula) enquanto nao houver papeis de usuario.
-  // Vazio = ninguem acessa.
-  journalEmails: new Set(
-    (process.env.JOURNAL_EMAILS || '')
-      .split(',')
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean)
-  ),
-
   // Caminho da pasta do frontend (servida estaticamente).
   frontendDir: path.join(ROOT, 'frontend'),
 };

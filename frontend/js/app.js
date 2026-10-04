@@ -74,7 +74,7 @@
         ] },
         { label: 'Investir', items: [
           { href: 'criptomoedas.html', ico: '₿', label: 'Criptomoedas' },
-          { href: 'diario.html', ico: '⌖', label: 'Diario', gate: 'journal' },
+          { href: 'diario.html', ico: '⌖', label: 'Diario' },
           { href: 'renda-fixa.html', ico: '▤', label: 'Renda Fixa' },
           { href: 'ativos.html', ico: '◆', label: 'Ativos' },
         ] },
@@ -87,15 +87,13 @@
           { href: 'cenarios.html', ico: 'Δ', label: 'Cenarios' },
         ] },
       ];
-      const link = (l) => `
-            <a class="nav-link ${l.href === active ? 'active' : ''}" href="${l.href}">
-              <span class="ico">${l.ico}</span><span class="label">${l.label}</span>
-            </a>`;
-      // Item com gate nao vem no HTML: so entra se o servidor liberar.
       const nav = groups.map((g) => `
         <div class="nav-group">
           <div class="nav-group-label">${g.label}</div>
-          ${g.items.map((l) => (l.gate ? `<span data-gate="${l.gate}"></span>` : link(l))).join('')}
+          ${g.items.map((l) => `
+            <a class="nav-link ${l.href === active ? 'active' : ''}" href="${l.href}">
+              <span class="ico">${l.ico}</span><span class="label">${l.label}</span>
+            </a>`).join('')}
         </div>`).join('');
 
       const el = document.getElementById('sidebar');
@@ -120,16 +118,6 @@
           <button id="logoutBtn">Sair</button>
         </div>`;
       document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
-
-      // Diario: quem decide e o servidor. /api/journal/enabled responde 200 so
-      // para os e-mails de JOURNAL_EMAILS; qualquer outra resposta tira o item.
-      const journal = groups.flatMap((g) => g.items).find((l) => l.gate === 'journal');
-      const slot = el.querySelector('[data-gate="journal"]');
-      if (journal && slot) {
-        window.API.journalEnabled()
-          .then(() => { slot.outerHTML = link(journal); })
-          .catch(() => slot.remove());
-      }
     },
 
     /**
