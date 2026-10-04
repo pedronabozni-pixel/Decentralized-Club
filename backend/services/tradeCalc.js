@@ -98,7 +98,9 @@ export function stopBeyondLiquidation(stop, liquidation, direction) {
 /**
  * Cenario de stop para uma posicao: resultado em US$ e em % do capital do
  * plano, movimento do preco ate o stop e o efeito disso na margem, mais a
- * liquidacao aproximada quando ha alavancagem.
+ * liquidacao aproximada quando ha alavancagem. Com o stop alem da
+ * liquidacao, a posicao e liquidada antes de chegar nele: a perda efetiva
+ * e a margem inteira, nao o resultado no stop.
  */
 export function stopScenario(position, { stopPrice, capitalUsd, leverage = 1, direction }) {
   if (!(position?.quantity > EPS) || !(stopPrice > 0)) return null;
@@ -106,16 +108,21 @@ export function stopScenario(position, { stopPrice, capitalUsd, leverage = 1, di
   const pnlUsd = pnlAt(position, stopPrice, direction);
   const movePct = (s * (stopPrice - position.avgPrice) / position.avgPrice) * 100;
   const liquidation = approxLiquidation(position.avgPrice, leverage, direction);
+  const beyond = stopBeyondLiquidation(stopPrice, liquidation, direction);
+  const effectivePnlUsd = beyond ? -position.marginUsd : pnlUsd;
+  const pctOf = (v) => (capitalUsd > 0 ? (v / capitalUsd) * 100 : null);
   return {
     avgPrice: position.avgPrice,
     marginUsd: position.marginUsd,
     quantity: position.quantity,
     pnlUsd,
-    pctOfCapital: capitalUsd > 0 ? (pnlUsd / capitalUsd) * 100 : null,
+    pctOfCapital: pctOf(pnlUsd),
+    effectivePnlUsd,
+    effectivePctOfCapital: pctOf(effectivePnlUsd),
     movePct,
     marginPct: movePct * leverage,
     liquidation,
-    stopBeyondLiquidation: stopBeyondLiquidation(stopPrice, liquidation, direction),
+    stopBeyondLiquidation: beyond,
   };
 }
 
