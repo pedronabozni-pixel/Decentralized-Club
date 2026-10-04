@@ -15,6 +15,7 @@ import portfolioRoutes from './routes/portfolio.js';
 import marketRoutes from './routes/market.js';
 import assetsRoutes from './routes/assets.js';
 import goalsRoutes from './routes/goals.js';
+import journalRoutes from './routes/journal.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 // Garante o schema do banco no boot (idempotente).
@@ -38,6 +39,7 @@ app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/assets', assetsRoutes);
 app.use('/api/goals', goalsRoutes);
+app.use('/api/journal', journalRoutes);
 
 // 404 apenas para rotas /api/* desconhecidas.
 app.use('/api', notFound);
