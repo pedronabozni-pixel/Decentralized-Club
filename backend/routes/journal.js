@@ -28,9 +28,12 @@ const STATUS_LABEL = {
   planejado: 'Planejado', aguardando_entrada: 'Aguardando entrada', aberto: 'Aberto',
   encerrado: 'Encerrado', cancelado: 'Cancelado',
 };
-// Planejado e cancelado podem ficar sem capital e sem entradas; a partir de
-// aguardando entrada o plano precisa dos dois.
-const NEEDS_CAPITAL = ['aguardando_entrada', 'aberto', 'encerrado'];
+// Planejado e cancelado sao rascunho: so ativo, mercado e direcao sao
+// obrigatorios. A partir de aguardando entrada o plano precisa estar completo:
+// capital, ao menos uma entrada, valor em US$ em cada entrada e stop.
+const NEEDS_COMPLETE = ['aguardando_entrada', 'aberto', 'encerrado'];
+// "a", "a e b", "a, b e c"
+const listPt = (items) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} e ${items.at(-1)}` : String(items[0]));
 
 // Campo vazio ('' ou null) vira null; texto com so espacos tambem.
 const blankToNull = (v) => (v === '' || v === null ? null : v);
@@ -48,7 +51,7 @@ const oneOf = (values, label) => z.enum(values, { errorMap: () => ({ message: `$
 const entrySchema = z.object({
   zoneFrom: positive('Preco da entrada'),
   zoneTo: optionalPositive('Preco da entrada'),
-  amountUsd: z.coerce.number().positive('Valor da entrada invalido.'),
+  amountUsd: optionalPositive('Valor da entrada'),
   executedPrice: optionalPositive('Preco executado'),
   eventDate: optionalDate,
 });
@@ -85,7 +88,7 @@ const planSchema = z.object({
     z.coerce.number().min(1, 'Alavancagem minima e 1x.').max(200, 'Alavancagem maxima e 200x.')
   ),
   structuralLevel: optionalPositive('Nivel estrutural'),
-  stopPrice: positive('Stop'),
+  stopPrice: optionalPositive('Stop'),
   entries: z.array(entrySchema).max(20).default([]),
   targets: z.array(targetSchema).max(20).default([]),
   alerts: z.array(alertSchema).max(30).default([]),
@@ -93,13 +96,21 @@ const planSchema = z.object({
   notes: z.array(noteSchema).max(300).default([]),
 }).superRefine((p, ctx) => {
   const issue = (path, message) => ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
-  if (NEEDS_CAPITAL.includes(p.status)) {
-    const label = STATUS_LABEL[p.status];
-    if (!(p.capitalUsd > 0)) issue('capitalUsd', `O status ${label} exige capital: defina o capital do plano em US$.`);
-    if (!p.entries.length) issue('entries', `O status ${label} exige ao menos uma entrada.`);
+  if (NEEDS_COMPLETE.includes(p.status)) {
+    const missing = [];
+    if (!(p.capitalUsd > 0)) missing.push('capital');
+    if (!p.entries.length) missing.push('ao menos uma entrada');
+    const noValue = p.entries.map((e, i) => (e.amountUsd > 0 ? null : i + 1)).filter(Boolean);
+    if (noValue.length) {
+      missing.push(`valor em US$ ${noValue.length > 1 ? 'das entradas' : 'da entrada'} ${listPt(noValue)}`);
+    }
+    if (!(p.stopPrice > 0)) missing.push('stop');
+    if (missing.length) {
+      issue('status', `Para o status ${STATUS_LABEL[p.status]} o plano precisa estar completo. Falta: ${listPt(missing)}.`);
+    }
   }
   // Entradas acima do capital so e erro quando o plano tem capital.
-  const entriesUsd = p.entries.reduce((s, e) => s + e.amountUsd, 0);
+  const entriesUsd = p.entries.reduce((s, e) => s + (e.amountUsd || 0), 0);
   if (p.capitalUsd > 0 && entriesUsd > p.capitalUsd * (1 + 1e-9)) {
     issue('entries', `As entradas somam US$ ${fmtUsd(entriesUsd)} e passam do capital de US$ ${fmtUsd(p.capitalUsd)}.`);
   }

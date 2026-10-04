@@ -68,7 +68,7 @@ function insertLevels(userId, planId, data) {
   };
   const groups = [
     ['entrada', data.entries, (e) => ({
-      zoneFrom: e.zoneFrom, zoneTo: e.zoneTo ?? null, amountUsd: e.amountUsd,
+      zoneFrom: e.zoneFrom, zoneTo: e.zoneTo ?? null, amountUsd: e.amountUsd ?? null,
       executedPrice: e.executedPrice ?? null, eventDate: e.eventDate ?? null,
     })],
     ['alvo', data.targets, (t) => ({ zoneFrom: t.zoneFrom, zoneTo: t.zoneTo ?? null, content: t.content ?? null })],

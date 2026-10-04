@@ -184,10 +184,22 @@ export function analyzePlan(plan) {
   const leverage = plan.leverage > 0 ? plan.leverage : 1;
   const ctx = { stopPrice, capitalUsd, leverage, direction };
   const s = directionSign(direction);
+  const planEntries = plan.entries || [];
 
-  const ordered = fillOrder(plan.entries || [], direction);
-  const all = aggregate(ordered, leverage);
-  const firstOnly = ordered.length ? aggregate([ordered[0]], leverage) : null;
+  // Rascunho pode estar incompleto. O que depende do que falta volta nulo:
+  // sem valor em alguma entrada nao ha preco medio nem conta em US$; sem stop
+  // nao ha perda nem risco/retorno.
+  const missing = {
+    capital: !(capitalUsd > 0),
+    entries: planEntries.length === 0,
+    values: planEntries.some((e) => !(e.amountUsd > 0)),
+    stop: !(stopPrice > 0),
+  };
+  const priced = !missing.entries && !missing.values;
+
+  const ordered = fillOrder(planEntries, direction);
+  const all = priced ? aggregate(ordered, leverage) : null;
+  const firstOnly = priced ? aggregate([ordered[0]], leverage) : null;
 
   const entries = ordered.map((e, i) => {
     const price = entryPrice(e);
@@ -197,7 +209,7 @@ export function analyzePlan(plan) {
       mid: zoneMid(e.zoneFrom, e.zoneTo),
       price,
       filled: isFilled(e),
-      quantity: price > 0 ? (e.amountUsd * leverage) / price : null,
+      quantity: price > 0 && e.amountUsd > 0 ? (e.amountUsd * leverage) / price : null,
       toStopPct: stopPrice > 0 && price > 0 ? (s * (price - stopPrice) / price) * 100 : null,
     };
   });
@@ -209,15 +221,21 @@ export function analyzePlan(plan) {
   }));
 
   return {
-    avgPrice: all.avgPrice,
-    entriesUsd: all.marginUsd,
-    notionalUsd: all.notionalUsd,
-    quantity: all.quantity,
+    missing,
+    avgPrice: all?.avgPrice ?? null,
+    entriesUsd: all?.marginUsd ?? null,
+    notionalUsd: all?.notionalUsd ?? null,
+    quantity: all?.quantity ?? null,
     entries,
     targets,
     ifAllFilled: stopScenario(all, ctx),
     ifFirstOnly: stopScenario(firstOnly, ctx),
-    realized: realizedResult(plan.entries || [], plan.exits || [], leverage, direction),
+    // Liquidacao depende so do preco medio e da alavancagem, nao do stop.
+    liquidation: {
+      all: approxLiquidation(all?.avgPrice, leverage, direction),
+      firstOnly: approxLiquidation(firstOnly?.avgPrice, leverage, direction),
+    },
+    realized: priced ? realizedResult(planEntries, plan.exits || [], leverage, direction) : null,
   };
 }
 
